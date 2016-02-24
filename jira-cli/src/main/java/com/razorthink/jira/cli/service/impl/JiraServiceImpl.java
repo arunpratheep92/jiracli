@@ -198,13 +198,85 @@ public class JiraServiceImpl implements JiraService {
 		}
 		int i=0;
 		for (BasicComponent component:retrievedComponents ){
-			//components.add(component.getName());
-			if(i !=0)
+			if(i !=0){
 				components.append(", ");
+			}
 			components.append(component.getName());
 			i++;	
 		}
 		return components.toString();
+	}
+
+	@Override
+	public String getDesription(String issue, String project) {
+		if (restClient == null) {
+			throw new DataException("403", "Unauthorized");
+		}
+		List<Issue> retrievedIssue = (List<Issue>) restClient.getSearchClient()
+				.searchJql("project=" + project + " and issue = " + issue).claim().getIssues();
+		return retrievedIssue.get(0).getDescription();
+	}
+
+	@Override
+	public String getReporter(String issue, String project) {
+		if (restClient == null) {
+			throw new DataException("403", "Unauthorized");
+		}
+		List<Issue> retrievedIssue = (List<Issue>) restClient.getSearchClient()
+				.searchJql("project=" + project + " and issue = " + issue).claim().getIssues();
+		if(retrievedIssue.get(0).getReporter() == null){
+			return null;
+		}
+		return retrievedIssue.get(0).getReporter().getName();
+	}
+
+	@Override
+	public String getAssignee(String issue, String project) {
+		if (restClient == null) {
+			throw new DataException("403", "Unauthorized");
+		}
+		List<Issue> retrievedIssue = (List<Issue>) restClient.getSearchClient()
+				.searchJql("project=" + project + " and issue = " + issue).claim().getIssues();
+		if(retrievedIssue.get(0).getAssignee() == null){
+			return null;
+		}
+		return retrievedIssue.get(0).getAssignee().getName();
+	}
+
+	@Override
+	public String getResolution(String issue, String project) {
+		if (restClient == null) {
+			throw new DataException("403", "Unauthorized");
+		}
+		List<Issue> retrievedIssue = (List<Issue>) restClient.getSearchClient()
+				.searchJql("project=" + project + " and issue = " + issue).claim().getIssues();
+		if(retrievedIssue.get(0).getResolution() == null){
+			return null;
+		}
+		return retrievedIssue.get(0).getResolution().getName();
+	}
+
+	@Override
+	public String getCreationDate(String issue, String project) {
+		if (restClient == null) {
+			throw new DataException("403", "Unauthorized");
+		}
+		List<Issue> retrievedIssue = (List<Issue>) restClient.getSearchClient()
+				.searchJql("project=" + project + " and issue = " + issue).claim().getIssues();
+		return retrievedIssue.get(0).getCreationDate().toString();
+	}
+
+	@Override
+	public String getUpdateDate(String issue, String project) {
+		if (restClient == null) {
+			throw new DataException("403", "Unauthorized");
+		}
+		List<Issue> retrievedIssue = (List<Issue>) restClient.getSearchClient()
+				.searchJql("project=" + project + " and issue = " + issue).claim().getIssues();
+		if(retrievedIssue.get(0).getUpdateDate() ==null){
+			return null;
+		}
+		return retrievedIssue.get(0).getUpdateDate().toString();
 	}
 
 }

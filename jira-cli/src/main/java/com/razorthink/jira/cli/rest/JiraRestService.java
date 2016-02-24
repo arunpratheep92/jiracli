@@ -114,12 +114,72 @@ public class JiraRestService {
 					return e.getMessage();
 				}
 			case "-getDescription":
-			/*case "-getReporter":
+				iterator.next();
+				issue = iterator.next();
+				iterator.next();
+				project = iterator.next();
+				try {
+					String description = jiraService.getDesription(issue, project);
+					return description;
+				} catch (Exception e) {
+					return e.getMessage();
+				}
+			case "-getReporter":
+				iterator.next();
+				issue = iterator.next();
+				iterator.next();
+				project = iterator.next();
+				try {
+					String reporter = jiraService.getReporter(issue, project);
+					return reporter;
+				} catch (Exception e) {
+					return e.getMessage();
+				}
 			case "-getAssignee":
+				iterator.next();
+				issue = iterator.next();
+				iterator.next();
+				project = iterator.next();
+				try {
+					String assignee = jiraService.getAssignee(issue, project);
+					return assignee;
+				} catch (Exception e) {
+					return e.getMessage();
+				}
 			case "-getResolution":
+				iterator.next();
+				issue = iterator.next();
+				iterator.next();
+				project = iterator.next();
+				try {
+					String resolution = jiraService.getResolution(issue, project);
+					return resolution;
+				} catch (Exception e) {
+					return e.getMessage();
+				}
 			case "-getCreationDate":
+				iterator.next();
+				issue = iterator.next();
+				iterator.next();
+				project = iterator.next();
+				try {
+					String createdDate = jiraService.getCreationDate(issue, project);
+					return createdDate;
+				} catch (Exception e) {
+					return e.getMessage();
+				}
 			case "-getUpdateDate":
-			case "-getDueDate":
+				iterator.next();
+				issue = iterator.next();
+				iterator.next();
+				project = iterator.next();
+				try {
+					String updateDate = jiraService.getUpdateDate(issue, project);
+					return updateDate;
+				} catch (Exception e) {
+					return e.getMessage();
+				}
+			/*case "-getDueDate":
 			case "-getPriority":
 			case "-getVotes":
 			case "-getFixVersions":

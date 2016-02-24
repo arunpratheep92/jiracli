@@ -14,4 +14,10 @@ public interface JiraService {
 	public String getStatus(String issue, String project);
 	public String getIssueType(String issue, String project);
 	public String getComponents(String issue, String project);
+	public String getDesription(String issue, String project);
+	public String getReporter(String issue, String project);
+	public String getAssignee(String issue, String project);
+	public String getResolution(String issue, String project);
+	public String getCreationDate(String issue, String project);
+	public String getUpdateDate(String issue, String project);
 }
