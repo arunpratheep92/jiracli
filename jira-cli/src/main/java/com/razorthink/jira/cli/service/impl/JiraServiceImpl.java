@@ -1,16 +1,21 @@
 package com.razorthink.jira.cli.service.impl;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Set;
+import java.util.concurrent.ExecutionException;
 
 import org.springframework.stereotype.Service;
 
+import com.atlassian.jira.rest.client.api.IssueRestClient;
 import com.atlassian.jira.rest.client.api.JiraRestClient;
 import com.atlassian.jira.rest.client.api.domain.BasicComponent;
 import com.atlassian.jira.rest.client.api.domain.BasicProject;
+import com.atlassian.jira.rest.client.api.domain.Comment;
 import com.atlassian.jira.rest.client.api.domain.Issue;
+import com.atlassian.jira.rest.client.api.domain.Version;
+import com.atlassian.util.concurrent.Promise;
 import com.razorthink.jira.cli.domain.JiraIssue;
 import com.razorthink.jira.cli.exception.DataException;
 import com.razorthink.jira.cli.service.JiraService;
@@ -189,20 +194,20 @@ public class JiraServiceImpl implements JiraService {
 		if (restClient == null) {
 			throw new DataException("403", "Unauthorized");
 		}
-		StringBuilder components= new StringBuilder("");
+		StringBuilder components = new StringBuilder("");
 		List<Issue> retrievedIssue = (List<Issue>) restClient.getSearchClient()
 				.searchJql("project=" + project + " and issue = " + issue).claim().getIssues();
 		List<BasicComponent> retrievedComponents = (List<BasicComponent>) retrievedIssue.get(0).getComponents();
-		if(retrievedComponents.isEmpty()){
+		if (retrievedComponents.isEmpty()) {
 			return null;
 		}
-		int i=0;
-		for (BasicComponent component:retrievedComponents ){
-			if(i !=0){
+		int i = 0;
+		for (BasicComponent component : retrievedComponents) {
+			if (i != 0) {
 				components.append(", ");
 			}
 			components.append(component.getName());
-			i++;	
+			i++;
 		}
 		return components.toString();
 	}
@@ -224,7 +229,7 @@ public class JiraServiceImpl implements JiraService {
 		}
 		List<Issue> retrievedIssue = (List<Issue>) restClient.getSearchClient()
 				.searchJql("project=" + project + " and issue = " + issue).claim().getIssues();
-		if(retrievedIssue.get(0).getReporter() == null){
+		if (retrievedIssue.get(0).getReporter() == null) {
 			return null;
 		}
 		return retrievedIssue.get(0).getReporter().getName();
@@ -237,7 +242,7 @@ public class JiraServiceImpl implements JiraService {
 		}
 		List<Issue> retrievedIssue = (List<Issue>) restClient.getSearchClient()
 				.searchJql("project=" + project + " and issue = " + issue).claim().getIssues();
-		if(retrievedIssue.get(0).getAssignee() == null){
+		if (retrievedIssue.get(0).getAssignee() == null) {
 			return null;
 		}
 		return retrievedIssue.get(0).getAssignee().getName();
@@ -250,7 +255,7 @@ public class JiraServiceImpl implements JiraService {
 		}
 		List<Issue> retrievedIssue = (List<Issue>) restClient.getSearchClient()
 				.searchJql("project=" + project + " and issue = " + issue).claim().getIssues();
-		if(retrievedIssue.get(0).getResolution() == null){
+		if (retrievedIssue.get(0).getResolution() == null) {
 			return null;
 		}
 		return retrievedIssue.get(0).getResolution().getName();
@@ -273,10 +278,146 @@ public class JiraServiceImpl implements JiraService {
 		}
 		List<Issue> retrievedIssue = (List<Issue>) restClient.getSearchClient()
 				.searchJql("project=" + project + " and issue = " + issue).claim().getIssues();
-		if(retrievedIssue.get(0).getUpdateDate() ==null){
+		if (retrievedIssue.get(0).getUpdateDate() == null) {
 			return null;
 		}
 		return retrievedIssue.get(0).getUpdateDate().toString();
+	}
+
+	@Override
+	public String getDueDate(String issue, String project) {
+		if (restClient == null) {
+			throw new DataException("403", "Unauthorized");
+		}
+		List<Issue> retrievedIssue = (List<Issue>) restClient.getSearchClient()
+				.searchJql("project=" + project + " and issue = " + issue).claim().getIssues();
+		if (retrievedIssue.get(0).getDueDate() == null) {
+			return null;
+		}
+		return retrievedIssue.get(0).getDueDate().toString();
+	}
+
+	@Override
+	public String getPriority(String issue, String project) {
+		if (restClient == null) {
+			throw new DataException("403", "Unauthorized");
+		}
+		List<Issue> retrievedIssue = (List<Issue>) restClient.getSearchClient()
+				.searchJql("project=" + project + " and issue = " + issue).claim().getIssues();
+		if (retrievedIssue.get(0).getPriority() == null) {
+			return null;
+		}
+		return retrievedIssue.get(0).getPriority().getName();
+	}
+
+	@Override
+	public String getVotes(String issue, String project) {
+		if (restClient == null) {
+			throw new DataException("403", "Unauthorized");
+		}
+		List<Issue> retrievedIssue = (List<Issue>) restClient.getSearchClient()
+				.searchJql("project=" + project + " and issue = " + issue).claim().getIssues();
+		if (retrievedIssue.get(0).getVotes() == null) {
+			return null;
+		}
+		return String.valueOf(retrievedIssue.get(0).getVotes().getVotes());
+	}
+
+	@Override
+	public String getFixVersions(String issue, String project) {
+		if (restClient == null) {
+			throw new DataException("403", "Unauthorized");
+		}
+		StringBuilder versions = new StringBuilder("");
+		List<Issue> retrievedIssue = (List<Issue>) restClient.getSearchClient()
+				.searchJql("project=" + project + " and issue = " + issue).claim().getIssues();
+		List<Version> retrievedFixVersions = (List<Version>) retrievedIssue.get(0).getFixVersions();
+		if (retrievedFixVersions.isEmpty()) {
+			return null;
+		}
+		int i = 0;
+		for (Version version : retrievedFixVersions) {
+			if (i != 0) {
+				versions.append(", ");
+			}
+			versions.append(version.getName());
+			i++;
+		}
+		return versions.toString();
+	}
+
+	@Override
+	public String getComments(String issue, String project) {
+		if (restClient == null) {
+			throw new DataException("403", "Unauthorized");
+		}
+		StringBuilder comments = new StringBuilder("");
+		IssueRestClient issueClient = restClient.getIssueClient();
+		Promise<Issue> retrievedIssue = issueClient.getIssue(issue);
+		List<Comment> retrievedComments;
+		try {
+			retrievedComments = (List<Comment>) retrievedIssue.get().getComments();
+		} catch (InterruptedException | ExecutionException e) {
+			return null;
+		}
+		if (retrievedComments.isEmpty()) {
+			return null;
+		}
+		int i = 0;
+		for (Comment comment : retrievedComments) {
+			if (i != 0) {
+				comments.append(",\n");
+			}
+			comments.append(comment.getAuthor().getName()+" : "+comment.getBody());
+			i++;
+		}
+		return comments.toString();
+	}
+
+	@Override
+	public String getWatchers(String issue, String project) {
+		if (restClient == null) {
+			throw new DataException("403", "Unauthorized");
+		}
+		List<Issue> retrievedIssue = (List<Issue>) restClient.getSearchClient()
+				.searchJql("project=" + project + " and issue = " + issue).claim().getIssues();
+		if (retrievedIssue.get(0).getWatchers() == null) {
+			return null;
+		}
+		return String.valueOf(retrievedIssue.get(0).getWatchers().getNumWatchers());
+	}
+
+	@Override
+	public String getLabels(String issue, String project) {
+		if (restClient == null) {
+			throw new DataException("403", "Unauthorized");
+		}
+		StringBuilder labels = new StringBuilder("");
+		List<Issue> retrievedIssue = (List<Issue>) restClient.getSearchClient()
+				.searchJql("project=" + project + " and issue = " + issue).claim().getIssues();
+		Set<String> retrievedLabels = retrievedIssue.get(0).getLabels();
+		if (retrievedLabels.isEmpty()) {
+			return null;
+		}
+		int i = 0;
+		for (String label : retrievedLabels) {
+			if (i != 0) {
+				labels.append(", ");
+			}
+			labels.append(label);
+			i++;
+		}
+		return labels.toString();
+
+	}
+
+	@Override
+	public String getJqlResult(String jqlValue) {
+		Iterable<Issue> retrievedissue = restClient.getSearchClient().searchJql(jqlValue).claim().getIssues();
+		for(Issue issue:retrievedissue){
+			
+		}
+		return null;
 	}
 
 }

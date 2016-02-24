@@ -80,7 +80,7 @@ public class JiraRestService {
 				break;
 
 			}
-			case "-getStatus": 
+			case "-getStatus":
 				iterator.next();
 				String issue = iterator.next();
 				iterator.next();
@@ -179,41 +179,92 @@ public class JiraRestService {
 				} catch (Exception e) {
 					return e.getMessage();
 				}
-			/*case "-getDueDate":
+			case "-getDueDate":
+				iterator.next();
+				issue = iterator.next();
+				iterator.next();
+				project = iterator.next();
+				try {
+					String dueDate = jiraService.getDueDate(issue, project);
+					return dueDate;
+				} catch (Exception e) {
+					return e.getMessage();
+				}
 			case "-getPriority":
+				iterator.next();
+				issue = iterator.next();
+				iterator.next();
+				project = iterator.next();
+				try {
+					String priority = jiraService.getPriority(issue, project);
+					return priority;
+				} catch (Exception e) {
+					return e.getMessage();
+				}
 			case "-getVotes":
+				iterator.next();
+				issue = iterator.next();
+				iterator.next();
+				project = iterator.next();
+				try {
+					String votes = jiraService.getVotes(issue, project);
+					return votes;
+				} catch (Exception e) {
+					return e.getMessage();
+				}
 			case "-getFixVersions":
+				iterator.next();
+				issue = iterator.next();
+				iterator.next();
+				project = iterator.next();
+				try {
+					String fixversions = jiraService.getFixVersions(issue, project);
+					return fixversions;
+				} catch (Exception e) {
+					return e.getMessage();
+				}
 			case "-getComments":
+				iterator.next();
+				issue = iterator.next();
+				iterator.next();
+				project = iterator.next();
+				try {
+					String comments = jiraService.getComments(issue, project);
+					return comments;
+				} catch (Exception e) {
+					return e.getMessage();
+				}
 			case "-getWatchers":
+				iterator.next();
+				issue = iterator.next();
+				iterator.next();
+				project = iterator.next();
+				try {
+					String watchers = jiraService.getWatchers(issue, project);
+					return watchers;
+				} catch (Exception e) {
+					return e.getMessage();
+				}
 			case "-getLabel":
 				iterator.next();
-				Method method = JiraServiceImpl.class.getMethod(iterator.previous());
-				String value = (String) method.invoke(jiraService);
-				if (!iterator.hasNext() || (iterator.hasNext() && !iterator.next().equals("--issue"))) {
-					return false;
-				}
-				if (!iterator.hasNext() || (iterator.hasNext() && jiraCommands.contains(iterator.next()))) {
-					return false;
-				}
-				if (!iterator.hasNext() || (iterator.hasNext() && !iterator.next().equals("--project"))) {
-					return false;
-				}
-				if (!iterator.hasNext() || (iterator.hasNext() && jiraCommands.contains(iterator.next()))) {
-					return false;
-				}
-				break;
-			case "-jql":
-				while (iterator.hasNext()) {
-					String jqlValue = iterator.next();
-					if (jiraCommands.contains(jqlValue) || followUpCommands.contains(jqlValue)) {
-						return false;
-					}
+				issue = iterator.next();
+				iterator.next();
+				project = iterator.next();
+				try {
+					String labels = jiraService.getLabels(issue, project);
+					return labels;
+				} catch (Exception e) {
+					return e.getMessage();
 				}
 
-			default:
-				return false;
-*/			}
-			// jiraService.jqlBuilder(commandTokens);
+			case "-jql":
+				StringBuilder jqlValue = new StringBuilder("");
+				while (iterator.hasNext()) {
+					jqlValue.append(iterator.next()).append(" ");
+				}
+				String jqlResult=jiraService.getJqlResult(jqlValue.toString());
+				return jqlResult;
+			}
 		}
 		return "valid";
 	}
