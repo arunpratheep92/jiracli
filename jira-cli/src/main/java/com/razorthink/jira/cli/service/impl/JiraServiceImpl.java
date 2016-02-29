@@ -1,5 +1,6 @@
 package com.razorthink.jira.cli.service.impl;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ListIterator;
@@ -14,11 +15,15 @@ import com.atlassian.jira.rest.client.api.domain.BasicComponent;
 import com.atlassian.jira.rest.client.api.domain.BasicProject;
 import com.atlassian.jira.rest.client.api.domain.Comment;
 import com.atlassian.jira.rest.client.api.domain.Issue;
+import com.atlassian.jira.rest.client.api.domain.IssueLink;
+import com.atlassian.jira.rest.client.api.domain.Subtask;
 import com.atlassian.jira.rest.client.api.domain.Version;
 import com.atlassian.util.concurrent.Promise;
 import com.razorthink.jira.cli.domain.JiraIssue;
+import com.razorthink.jira.cli.domain.JiraSubtask;
 import com.razorthink.jira.cli.exception.DataException;
 import com.razorthink.jira.cli.service.JiraService;
+import com.razorthink.utils.cmutils.NullEmptyUtils;
 
 import net.rcarz.jiraclient.JiraException;
 
@@ -31,17 +36,38 @@ public class JiraServiceImpl implements JiraService {
 
 	static List<String> followUpCommands = Arrays.asList("--status", "--issuetype", "--component", "--description",
 			"--reporter", "--assignee", "--resolution", "--createdDate", "--updatedDate", "--duedate", "--priority",
-			"--fixVersion", "--labels");
-
+			"--fixVersion", "--sprint", "--labels");
+	static StringBuilder str = new StringBuilder("");
+	static String help = str.append("-u\t\t:   Specify the user name").append("\n")
+			.append("-p\t\t:   Specify the password").append("\n").append("-url\t\t:   Specify the jira url")
+			.append("\n")
+			.append("-getProjects\t:    Retrieves all the projects in the atlassian account specified by the url")
+			.append("\n").append("-getIssues\t:    Retrieves all the issues for the specified project").append("\n")
+			.append("-getStatus\t:    Returns the current status of the specified issue").append("\n")
+			.append("-getIssueType\t:    Returns the type of specified issue").append("\n")
+			.append("-getComponents\t:    Returns the components of the specified issue").append("\n")
+			.append("-getDescription\t:    Returns the description of the specified issue").append("\n")
+			.append("-getReporter\t:    Returns the reporter of the specified issue").append("\n")
+			.append("-getAssignee\t:    Returns the assignee of the specified issue").append("\n")
+			.append("-getResolution\t:    Returns the resolution of the specified issue").append("\n")
+			.append("-getCreationDate:    Returns the creation date of the specified issue").append("\n")
+			.append("-getUpdateDate\t:    Returns the updated date of the specified issue").append("\n")
+			.append("-getDueDate\t:    Returns the due date of the specified issue").append("\n")
+			.append("-getPriority\t:    Returns the priority of the specified issue").append("\n")
+			.append("-getVotes\t:    Retrieves all the votes for the specified issue").append("\n")
+			.append("-getFixVersions\t:    Retrieves all the FixVersions for the specified issue").append("\n")
+			.append("-getComments\t:    Retrieves all the comments for the specified issue").append("\n")
+			.append("-getWatchers\t:    Returns the list of watchers for the specified issue").append("\n")
+			.append("-getLabel\t:    Returns the label for the specified issue").append("\n")
+			.append("-jql\t\t:    Performs an advanced search in JIRA using Jira Query Language").toString();
 	private static com.razorthink.utils.jira.api.JiraService js = new com.razorthink.utils.jira.api.JiraService();
 	private JiraRestClient restClient;
 
 	@Override
-	public Boolean validate(String[] commandTokens) {
-		if (!commandTokens[0].equals("jira")) {
+	public Boolean validate(List<String> commandToken) {
+		if (!commandToken.get(0).equals("jira")) {
 			return false;
 		}
-		List<String> commandToken = Arrays.asList(commandTokens);
 		for (String token : commandToken) {
 			System.out.println("\nToken== " + token);
 		}
@@ -49,6 +75,11 @@ public class JiraServiceImpl implements JiraService {
 		while (iterator.hasNext()) {
 			switch (iterator.next()) {
 			case "jira":
+				break;
+			case "--help":
+				if (iterator.hasNext()) {
+					return false;
+				}
 				break;
 			case "-u":
 				if (!iterator.hasNext() || (iterator.hasNext() && jiraCommands.contains(iterator.next()))) {
@@ -131,7 +162,7 @@ public class JiraServiceImpl implements JiraService {
 						return false;
 					}
 				}
-
+				break;
 			default:
 				return false;
 			}
@@ -142,11 +173,11 @@ public class JiraServiceImpl implements JiraService {
 	@Override
 	public Boolean login(String username, String password, String url) {
 		try {
-			System.out.println("\n restclient=" + restClient);
 			restClient = js.authorize(url, username, password);
+			System.out.println("\n projects" + restClient.getProjectClient().getAllProjects().claim());
 			return true;
 		} catch (Exception e) {
-			throw new DataException("302", "Could not login");
+			throw new DataException("401", "Could not login");
 		}
 	}
 
@@ -368,7 +399,7 @@ public class JiraServiceImpl implements JiraService {
 			if (i != 0) {
 				comments.append(",\n");
 			}
-			comments.append(comment.getAuthor().getName()+" : "+comment.getBody());
+			comments.append(comment.getAuthor().getName() + " : " + comment.getBody());
 			i++;
 		}
 		return comments.toString();
@@ -412,12 +443,204 @@ public class JiraServiceImpl implements JiraService {
 	}
 
 	@Override
-	public String getJqlResult(String jqlValue) {
+	public List<JiraIssue> getJqlResult(String jqlValue) {
+		List<JiraIssue> issues = new ArrayList<>();
 		Iterable<Issue> retrievedissue = restClient.getSearchClient().searchJql(jqlValue).claim().getIssues();
-		for(Issue issue:retrievedissue){
-			
+		for (Issue issueValue : retrievedissue) {
+			Promise<Issue> issue = restClient.getIssueClient().getIssue(issueValue.getKey());
+			JiraIssue jiraIssue = new JiraIssue();
+			try {
+				jiraIssue.setKey(issue.get().getKey());
+				jiraIssue.setStatus(issue.get().getStatus().getName());
+				jiraIssue.setIssueType(issue.get().getIssueType().getName());
+				jiraIssue.setProject(issue.get().getProject().getName());
+				jiraIssue.setSummary(issue.get().getSummary());
+				jiraIssue.setDescription(issue.get().getDescription());
+				jiraIssue.setReporter(issue.get().getReporter().getName());
+				if (issue.get().getAssignee() != null) {
+					jiraIssue.setAssignee(issue.get().getAssignee().getName());
+				} else {
+					jiraIssue.setAssignee("Unassigned");
+				}
+				if (issue.get().getResolution() != null) {
+					jiraIssue.setResolution(issue.get().getResolution().getName());
+				} else {
+					jiraIssue.setResolution("Unresolved");
+				}
+				jiraIssue.setCreationDate(issue.get().getCreationDate().toString());
+				if (issue.get().getUpdateDate() != null) {
+					jiraIssue.setUpdateDate(issue.get().getUpdateDate().toString());
+				} else {
+					jiraIssue.setUpdateDate("null");
+				}
+				if (issue.get().getDueDate() != null) {
+					jiraIssue.setUpdateDate(issue.get().getDueDate().toString());
+				} else {
+					jiraIssue.setDueDate("null");
+				}
+				if (issue.get().getPriority() != null) {
+					jiraIssue.setPriority(issue.get().getPriority().getName());
+				} else {
+					jiraIssue.setPriority("null");
+				}
+				if (issue.get().getComponents() != null) {
+					List<String> jiraComponents = new ArrayList<>();
+					for (BasicComponent component : issue.get().getComponents()) {
+						jiraComponents.add(component.getName());
+					}
+					jiraIssue.setComponents(jiraComponents);
+
+				} else {
+					jiraIssue.setComponents(null);
+				}
+				if (issue.get().getComments() != null) {
+					List<String> jiraComments = new ArrayList<>();
+					for (Comment comment : issue.get().getComments()) {
+						jiraComments.add(comment.getAuthor().getName() + " : " + comment.getBody());
+					}
+					jiraIssue.setComments(jiraComments);
+
+				} else {
+					jiraIssue.setComments(null);
+				}
+				if (issue.get().getFixVersions() != null) {
+					List<String> jiraFixVersions = new ArrayList<>();
+					for (Version version : issue.get().getFixVersions()) {
+						jiraFixVersions.add(version.getName());
+					}
+					jiraIssue.setFixVersions(jiraFixVersions);
+
+				} else {
+					jiraIssue.setFixVersions(null);
+				}
+				if (issue.get().getAffectedVersions() != null) {
+					List<String> jiraAffectedVersions = new ArrayList<>();
+					for (Version version : issue.get().getAffectedVersions()) {
+						jiraAffectedVersions.add(version.getName());
+					}
+					jiraIssue.setAffectedVersions(jiraAffectedVersions);
+
+				} else {
+					jiraIssue.setFixVersions(null);
+				}
+				if (issue.get().getIssueLinks() != null) {
+					List<String> jiraIssueLinks = new ArrayList<>();
+					for (IssueLink issueLink : issue.get().getIssueLinks()) {
+						jiraIssueLinks.add(issueLink.getIssueLinkType().getName());
+					}
+					jiraIssue.setIssueLinks(jiraIssueLinks);
+
+				} else {
+					jiraIssue.setIssueLinks(null);
+				}
+				if (issue.get().getLabels() != null) {
+					jiraIssue.setLabels(issue.get().getLabels());
+
+				} else {
+					jiraIssue.setLabels(null);
+				}
+				if (!NullEmptyUtils.isNullorEmpty((List<?>) issue.get().getFields())) {
+					if (issue.get().getFieldByName("Epic Link") != null
+							&& issue.get().getFieldByName("Epic Link").getValue() != null) {
+						jiraIssue.setEpicLink(issue.get().getFieldByName("Epic Link").getValue().toString());
+					} else {
+						jiraIssue.setEpicLink("null");
+					}
+					if (issue.get().getFieldByName("Sprint") != null
+							&& issue.get().getFieldByName("Sprint").getValue() != null) {
+						jiraIssue.setSprint(issue.get().getFieldByName("Sprint").getValue().toString());
+					} else {
+						jiraIssue.setSprint("null");
+					}
+				}
+				jiraIssue.setTimeTracking(issue.get().getTimeTracking());
+				if (issue.get().getSubtasks() != null) {
+					List<JiraSubtask> subtask = new ArrayList<>();
+					for (Subtask subtasks : issue.get().getSubtasks()) {
+						JiraSubtask task = new JiraSubtask();
+						task.setIssueKey(subtasks.getIssueKey());
+						task.setIssueType(subtasks.getIssueType().getName());
+						task.setStatus(subtasks.getStatus().getName());
+						task.setSummary(subtasks.getSummary());
+						subtask.add(task);
+					}
+					jiraIssue.setSubtasks(subtask);
+
+				} else {
+					jiraIssue.setIssueLinks(null);
+				}
+				issues.add(jiraIssue);
+			} catch (Exception e) {
+				e.printStackTrace();
+				return null;
+			}
 		}
-		return null;
+		return issues;
+	}
+
+	@Override
+	public List<JiraIssue> getAllIssues(List<String> commandToken) {
+		StringBuilder jqlValue = new StringBuilder("");
+		ListIterator<String> iterator = commandToken.listIterator();
+		while (iterator.hasNext()) {
+			switch (iterator.next()) {
+			case "--status":
+				jqlValue.append(" status = '").append(iterator.next()).append("' AND ");
+				break;
+			case "--issuetype":
+				jqlValue.append(" issuetype = '").append(iterator.next()).append("' AND ");
+				break;
+			case "--component":
+				jqlValue.append(" component = '").append(iterator.next()).append("' AND ");
+				break;
+			case "--description":
+				jqlValue.append(" description ~ '").append(iterator.next()).append("'AND ");
+				break;
+			case "--reporter":
+				jqlValue.append(" reporter = '").append(iterator.next()).append("' AND ");
+				break;
+			case "--assignee":
+				jqlValue.append(" assignee = '").append(iterator.next()).append("' AND ");
+				break;
+			case "--resolution":
+				jqlValue.append(" resolution = '").append(iterator.next()).append("' AND ");
+				break;
+			case "--createdDate":
+				jqlValue.append(" createdDate = ").append(iterator.next()).append(" AND ");
+				break;
+			case "--updatedDate":
+				jqlValue.append(" updatedDate = ").append(iterator.next()).append(" AND ");
+				break;
+			case "--duedate":
+				jqlValue.append(" duedate = ").append(iterator.next()).append(" AND ");
+				break;
+			case "--priority":
+				jqlValue.append(" priority = ").append(iterator.next()).append(" AND ");
+				break;
+			case "--fixVersion":
+				jqlValue.append(" fixVersion = ").append(iterator.next()).append(" AND ");
+				break;
+			case "--sprint":
+				jqlValue.append(" Sprint = '").append(iterator.next()).append("' AND ");
+				break;
+			case "--labels":
+				jqlValue.append(" labels = '").append(iterator.next()).append("' AND ");
+				break;
+			case "--issue":
+				jqlValue.append(" issue = '").append(iterator.next()).append("' AND ");
+				break;
+			case "--project":
+				jqlValue.append(" project = '").append(iterator.next()).append("'");
+				break;
+			}
+		}
+		List<JiraIssue> issues = getJqlResult(jqlValue.toString());
+		return issues;
+	}
+
+	@Override
+	public String getHelp() {
+		return help;
 	}
 
 }

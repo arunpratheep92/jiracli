@@ -7,7 +7,7 @@ import com.razorthink.jira.cli.domain.JiraIssue;
 
 public interface JiraService {
 
-	public Boolean validate(String[] commandTokens);
+	public Boolean validate(List<String> commandToken);
 
 	public Boolean login(String username, String password, String url);
 
@@ -47,5 +47,9 @@ public interface JiraService {
 
 	public String getLabels(String issue, String project);
 
-	public String getJqlResult(String jqlValue);
+	public List<JiraIssue> getJqlResult(String jqlValue);
+
+	public List<JiraIssue> getAllIssues(List<String> commandToken);
+
+	public String getHelp();
 }

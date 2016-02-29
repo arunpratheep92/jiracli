@@ -1,8 +1,10 @@
 package com.razorthink.jira.cli.rest;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
@@ -16,7 +18,10 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.atlassian.jira.rest.client.api.domain.BasicProject;
+import com.razorthink.jira.cli.domain.JiraIssue;
 import com.razorthink.jira.cli.service.JiraService;
+import com.razorthink.utils.cmutils.JSONUtils;
+import com.razorthink.utils.cmutils.exception.UtilsException;
 
 @RestController
 @RequestMapping("/jiraServices")
@@ -31,15 +36,23 @@ public class JiraRestService {
 	@RequestMapping(value = "/commands", method = RequestMethod.POST)
 	public String jiraService(@RequestBody String commands) {
 		commands = commands.trim();
-		System.out.println("\n\nCommands==" + commands);
 		commands = commands.replaceAll("\\s+", " ");
-		String[] commandTokens = commands.split(" ");
-		if (!jiraService.validate(commandTokens)) {
-			return "Invalid Syntax";
+		commands = commands.trim();
+		Pattern regex = Pattern.compile("[^\\s\"']+|\"([^\"]*)\"|'([^']*)'");
+		Matcher regexMatcher = regex.matcher(commands);
+		List<String> commandToken = new ArrayList<>();
+		while (regexMatcher.find()) {
+			if (regexMatcher.group(1) != null) {
+				commandToken.add((regexMatcher.group(1)));
+			} else if (regexMatcher.group(2) != null) {
+				commandToken.add(regexMatcher.group(2));
+			} else {
+				commandToken.add(regexMatcher.group());
+			}
 		}
-		List<String> commandToken = Arrays.asList(commandTokens);
-		for (String token : commandToken) {
-			System.out.println("\nToken== " + token);
+		System.out.println("\n\n Tokenss=" + commandToken);
+		if (!jiraService.validate(commandToken)) {
+			return "Invalid Syntax";
 		}
 		ListIterator<String> iterator = commandToken.listIterator();
 		while (iterator.hasNext()) {
@@ -73,12 +86,12 @@ public class JiraRestService {
 			}
 			case "-getIssues": {
 				try {
-					jiraService.getAllProjects();
+					List<JiraIssue> jqlResult = jiraService.getAllIssues(commandToken);
+					String result = JSONUtils.toJson(jqlResult);
+					return result;
 				} catch (Exception e) {
 					return e.getMessage();
 				}
-				break;
-
 			}
 			case "-getStatus":
 				iterator.next();
@@ -262,8 +275,15 @@ public class JiraRestService {
 				while (iterator.hasNext()) {
 					jqlValue.append(iterator.next()).append(" ");
 				}
-				String jqlResult=jiraService.getJqlResult(jqlValue.toString());
-				return jqlResult;
+				List<JiraIssue> jqlResult = jiraService.getJqlResult(jqlValue.toString());
+				try {
+					String result = JSONUtils.toJson(jqlResult);
+					return result;
+				} catch (UtilsException e) {
+					return e.getMessage();
+				}
+			case "--help":
+				return jiraService.getHelp();
 			}
 		}
 		return "valid";
