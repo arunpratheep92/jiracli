@@ -1,10 +1,10 @@
 package com.razorthink.jira.cli.exception;
 
-@SuppressWarnings("serial")
+@SuppressWarnings({ "serial", "unused" })
 public class DataException extends RuntimeException {
 
-	private String errorCode;
-	private String errorMessage;
+	private final String errorCode;
+	private final String errorMessage;
 
 	public DataException(String errorCode, String errorMessage) {
 		super(errorMessage);
@@ -12,21 +12,4 @@ public class DataException extends RuntimeException {
 		this.errorCode = errorCode;
 
 	}
-
-	public String getErrorCode() {
-		return errorCode;
-	}
-
-	public void setErrorCode(String errorCode) {
-		this.errorCode = errorCode;
-	}
-
-	public String getErrorMessage() {
-		return errorMessage;
-	}
-
-	public void setErrorMessage(String errorMessage) {
-		this.errorMessage = errorMessage;
-	}
-
 }

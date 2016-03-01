@@ -6,9 +6,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
-
 import org.springframework.stereotype.Service;
-
 import com.atlassian.jira.rest.client.api.IssueRestClient;
 import com.atlassian.jira.rest.client.api.JiraRestClient;
 import com.atlassian.jira.rest.client.api.domain.BasicComponent;
@@ -24,11 +22,11 @@ import com.razorthink.jira.cli.domain.JiraSubtask;
 import com.razorthink.jira.cli.exception.DataException;
 import com.razorthink.jira.cli.service.JiraService;
 import com.razorthink.utils.cmutils.NullEmptyUtils;
-
 import net.rcarz.jiraclient.JiraException;
 
 @Service
 public class JiraServiceImpl implements JiraService {
+
 	static List<String> jiraCommands = Arrays.asList("-u", "-p", "-url", "-getProjects", "-getIssues", "-getStatus",
 			"-getIssueType", "-getComponents", "-getDescription", "-getReporter", "-getAssignee", "-getResolution",
 			"-getCreationDate", "-getUpdateDate", "-getDueDate", "-getPriority", "-getVotes", "-getFixVersions",
@@ -36,7 +34,7 @@ public class JiraServiceImpl implements JiraService {
 
 	static List<String> followUpCommands = Arrays.asList("--status", "--issuetype", "--component", "--description",
 			"--reporter", "--assignee", "--resolution", "--createdDate", "--updatedDate", "--duedate", "--priority",
-			"--fixVersion", "--sprint", "--labels");
+			"--fixVersion", "--sprint", "--labels,--help");
 	static StringBuilder str = new StringBuilder("");
 	static String help = str.append("-u\t\t:   Specify the user name").append("\n")
 			.append("-p\t\t:   Specify the password").append("\n").append("-url\t\t:   Specify the jira url")
@@ -64,145 +62,180 @@ public class JiraServiceImpl implements JiraService {
 	private JiraRestClient restClient;
 
 	@Override
-	public Boolean validate(List<String> commandToken) {
-		if (!commandToken.get(0).equals("jira")) {
+	public Boolean validate( List<String> commandToken )
+	{
+		if( !commandToken.get(0).equals("jira") )
+		{
 			return false;
 		}
-		for (String token : commandToken) {
-			System.out.println("\nToken== " + token);
-		}
 		ListIterator<String> iterator = commandToken.listIterator();
-		while (iterator.hasNext()) {
-			switch (iterator.next()) {
-			case "jira":
-				break;
-			case "--help":
-				if (iterator.hasNext()) {
-					return false;
-				}
-				break;
-			case "-u":
-				if (!iterator.hasNext() || (iterator.hasNext() && jiraCommands.contains(iterator.next()))) {
-					return false;
-				}
-				if (!iterator.hasNext() || (iterator.hasNext() && !iterator.next().equals("-p"))) {
-					return false;
-				}
-				if (!iterator.hasNext() || (iterator.hasNext() && jiraCommands.contains(iterator.next()))) {
-					return false;
-				}
-				if (!iterator.hasNext() || (iterator.hasNext() && !iterator.next().equals("-url"))) {
-					return false;
-				}
-				if (!iterator.hasNext() || (iterator.hasNext() && jiraCommands.contains(iterator.next()))) {
-					return false;
-				}
-				break;
-			case "-getProjects":
-				if (iterator.hasNext()) {
-					return false;
-				}
-				break;
-			case "-getIssues": {
-				while (iterator.hasNext()) {
-					if (followUpCommands.contains(iterator.next())) {
-						String paramValue = iterator.next();
-						if (!iterator.hasNext() || (iterator.hasNext()
-								&& (jiraCommands.contains(paramValue) || followUpCommands.contains(paramValue)))) {
-							return false;
-						}
-					} else {
-						iterator.previous();
-						break;
-					}
-				}
-
-				if (!iterator.hasNext() || (iterator.hasNext() && !iterator.next().equals("--project"))) {
-					return false;
-				}
-				if (!iterator.hasNext() || (iterator.hasNext() && jiraCommands.contains(iterator.next()))) {
-					return false;
-				}
-				break;
-			}
-			case "-getStatus":
-			case "-getIssueType":
-			case "-getComponents":
-			case "-getDescription":
-			case "-getReporter":
-			case "-getAssignee":
-			case "-getResolution":
-			case "-getCreationDate":
-			case "-getUpdateDate":
-			case "-getDueDate":
-			case "-getPriority":
-			case "-getVotes":
-			case "-getFixVersions":
-			case "-getComments":
-			case "-getWatchers":
-			case "-getLabel":
-
-				if (!iterator.hasNext() || (iterator.hasNext() && !iterator.next().equals("--issue"))) {
-					return false;
-				}
-				if (!iterator.hasNext() || (iterator.hasNext() && jiraCommands.contains(iterator.next()))) {
-					return false;
-				}
-				if (!iterator.hasNext() || (iterator.hasNext() && !iterator.next().equals("--project"))) {
-					return false;
-				}
-				if (!iterator.hasNext() || (iterator.hasNext() && jiraCommands.contains(iterator.next()))) {
-					return false;
-				}
-				break;
-			case "-jql":
-				while (iterator.hasNext()) {
-					String jqlValue = iterator.next();
-					if (jiraCommands.contains(jqlValue) || followUpCommands.contains(jqlValue)) {
+		while( iterator.hasNext() )
+		{
+			switch ( iterator.next() )
+			{
+				case "jira" :
+					break;
+				case "--help" :
+					if( iterator.hasNext() )
+					{
 						return false;
 					}
-				}
-				break;
-			default:
-				return false;
+					break;
+				case "-u" :
+					if( !iterator.hasNext() || (iterator.hasNext() && jiraCommands.contains(iterator.next())) )
+					{
+						return false;
+					}
+					if( !iterator.hasNext() || (iterator.hasNext() && !iterator.next().equals("-p")) )
+					{
+						return false;
+					}
+					if( !iterator.hasNext() || (iterator.hasNext() && jiraCommands.contains(iterator.next())) )
+					{
+						return false;
+					}
+					if( !iterator.hasNext() || (iterator.hasNext() && !iterator.next().equals("-url")) )
+					{
+						return false;
+					}
+					if( !iterator.hasNext() || (iterator.hasNext() && jiraCommands.contains(iterator.next())) )
+					{
+						return false;
+					}
+					break;
+				case "-getProjects" :
+					if( iterator.hasNext() )
+					{
+						return false;
+					}
+					break;
+				case "-getIssues" :
+					while( iterator.hasNext() )
+					{
+						if( followUpCommands.contains(iterator.next()) )
+						{
+							String paramValue = iterator.next();
+							if( !iterator.hasNext() || (iterator.hasNext()
+									&& (jiraCommands.contains(paramValue) || followUpCommands.contains(paramValue))) )
+							{
+								return false;
+							}
+						}
+						else
+						{
+							iterator.previous();
+							break;
+						}
+					}
+					if( iterator.hasNext() && iterator.next().equals("--issue") )
+					{
+						if( !iterator.hasNext() || (iterator.hasNext() && jiraCommands.contains(iterator.next())) )
+						{
+							return false;
+						}
+					}
+					else
+					{
+						iterator.previous();
+					}
+					if( !iterator.hasNext() || (iterator.hasNext() && !iterator.next().equals("--project")) )
+					{
+						return false;
+					}
+					if( !iterator.hasNext() || (iterator.hasNext() && jiraCommands.contains(iterator.next())) )
+					{
+						return false;
+					}
+					break;
+				case "-getStatus" :
+				case "-getIssueType" :
+				case "-getComponents" :
+				case "-getDescription" :
+				case "-getReporter" :
+				case "-getAssignee" :
+				case "-getResolution" :
+				case "-getCreationDate" :
+				case "-getUpdateDate" :
+				case "-getDueDate" :
+				case "-getPriority" :
+				case "-getVotes" :
+				case "-getFixVersions" :
+				case "-getComments" :
+				case "-getWatchers" :
+				case "-getLabel" :
+					if( !iterator.hasNext() || (iterator.hasNext() && !iterator.next().equals("--issue")) )
+					{
+						return false;
+					}
+					if( !iterator.hasNext() || (iterator.hasNext() && jiraCommands.contains(iterator.next())) )
+					{
+						return false;
+					}
+					if( !iterator.hasNext() || (iterator.hasNext() && !iterator.next().equals("--project")) )
+					{
+						return false;
+					}
+					if( !iterator.hasNext() || (iterator.hasNext() && jiraCommands.contains(iterator.next())) )
+					{
+						return false;
+					}
+					break;
+				case "-jql" :
+					while( iterator.hasNext() )
+					{
+						String jqlValue = iterator.next();
+						if( jiraCommands.contains(jqlValue) || followUpCommands.contains(jqlValue) )
+						{
+							return false;
+						}
+					}
+					break;
+				default :
+					return false;
 			}
 		}
 		return true;
 	}
 
 	@Override
-	public Boolean login(String username, String password, String url) {
-		try {
+	public Boolean login( String username, String password, String url )
+	{
+		try
+		{
 			restClient = js.authorize(url, username, password);
-			System.out.println("\n projects" + restClient.getProjectClient().getAllProjects().claim());
+			restClient.getProjectClient().getAllProjects().claim();
 			return true;
-		} catch (Exception e) {
+		}
+		catch( Exception e )
+		{
 			throw new DataException("401", "Could not login");
 		}
 	}
 
 	@Override
-	public List<JiraIssue> jqlBuilder(String[] commandTokens) {
-		return null;
-	}
-
-	@Override
-	public List<BasicProject> getAllProjects() {
-		if (restClient == null) {
+	public List<BasicProject> getAllProjects()
+	{
+		if( restClient == null )
+		{
 			throw new DataException("403", "Unauthorized");
 		}
 		List<BasicProject> retrievedProjects;
-		try {
+		try
+		{
 			retrievedProjects = js.getProjects();
-		} catch (JiraException e) {
+		}
+		catch( JiraException e )
+		{
 			throw new DataException("500", "Internal Server Error");
 		}
 		return retrievedProjects;
 	}
 
 	@Override
-	public String getStatus(String issue, String project) {
-		if (restClient == null) {
+	public String getStatus( String issue, String project )
+	{
+		if( restClient == null )
+		{
 			throw new DataException("403", "Unauthorized");
 		}
 		List<Issue> retrievedIssue = (List<Issue>) restClient.getSearchClient()
@@ -211,8 +244,10 @@ public class JiraServiceImpl implements JiraService {
 	}
 
 	@Override
-	public String getIssueType(String issue, String project) {
-		if (restClient == null) {
+	public String getIssueType( String issue, String project )
+	{
+		if( restClient == null )
+		{
 			throw new DataException("403", "Unauthorized");
 		}
 		List<Issue> retrievedIssue = (List<Issue>) restClient.getSearchClient()
@@ -221,20 +256,25 @@ public class JiraServiceImpl implements JiraService {
 	}
 
 	@Override
-	public String getComponents(String issue, String project) {
-		if (restClient == null) {
+	public String getComponents( String issue, String project )
+	{
+		if( restClient == null )
+		{
 			throw new DataException("403", "Unauthorized");
 		}
 		StringBuilder components = new StringBuilder("");
 		List<Issue> retrievedIssue = (List<Issue>) restClient.getSearchClient()
 				.searchJql("project=" + project + " and issue = " + issue).claim().getIssues();
 		List<BasicComponent> retrievedComponents = (List<BasicComponent>) retrievedIssue.get(0).getComponents();
-		if (retrievedComponents.isEmpty()) {
+		if( retrievedComponents.isEmpty() )
+		{
 			return null;
 		}
 		int i = 0;
-		for (BasicComponent component : retrievedComponents) {
-			if (i != 0) {
+		for( BasicComponent component : retrievedComponents )
+		{
+			if( i != 0 )
+			{
 				components.append(", ");
 			}
 			components.append(component.getName());
@@ -244,8 +284,10 @@ public class JiraServiceImpl implements JiraService {
 	}
 
 	@Override
-	public String getDesription(String issue, String project) {
-		if (restClient == null) {
+	public String getDesription( String issue, String project )
+	{
+		if( restClient == null )
+		{
 			throw new DataException("403", "Unauthorized");
 		}
 		List<Issue> retrievedIssue = (List<Issue>) restClient.getSearchClient()
@@ -254,47 +296,58 @@ public class JiraServiceImpl implements JiraService {
 	}
 
 	@Override
-	public String getReporter(String issue, String project) {
-		if (restClient == null) {
+	public String getReporter( String issue, String project )
+	{
+		if( restClient == null )
+		{
 			throw new DataException("403", "Unauthorized");
 		}
 		List<Issue> retrievedIssue = (List<Issue>) restClient.getSearchClient()
 				.searchJql("project=" + project + " and issue = " + issue).claim().getIssues();
-		if (retrievedIssue.get(0).getReporter() == null) {
+		if( retrievedIssue.get(0).getReporter() == null )
+		{
 			return null;
 		}
 		return retrievedIssue.get(0).getReporter().getName();
 	}
 
 	@Override
-	public String getAssignee(String issue, String project) {
-		if (restClient == null) {
+	public String getAssignee( String issue, String project )
+	{
+		if( restClient == null )
+		{
 			throw new DataException("403", "Unauthorized");
 		}
 		List<Issue> retrievedIssue = (List<Issue>) restClient.getSearchClient()
 				.searchJql("project=" + project + " and issue = " + issue).claim().getIssues();
-		if (retrievedIssue.get(0).getAssignee() == null) {
+		if( retrievedIssue.get(0).getAssignee() == null )
+		{
 			return null;
 		}
 		return retrievedIssue.get(0).getAssignee().getName();
 	}
 
 	@Override
-	public String getResolution(String issue, String project) {
-		if (restClient == null) {
+	public String getResolution( String issue, String project )
+	{
+		if( restClient == null )
+		{
 			throw new DataException("403", "Unauthorized");
 		}
 		List<Issue> retrievedIssue = (List<Issue>) restClient.getSearchClient()
 				.searchJql("project=" + project + " and issue = " + issue).claim().getIssues();
-		if (retrievedIssue.get(0).getResolution() == null) {
-			return null;
+		if( retrievedIssue.get(0).getResolution() == null )
+		{
+			return "Unresolved";
 		}
 		return retrievedIssue.get(0).getResolution().getName();
 	}
 
 	@Override
-	public String getCreationDate(String issue, String project) {
-		if (restClient == null) {
+	public String getCreationDate( String issue, String project )
+	{
+		if( restClient == null )
+		{
 			throw new DataException("403", "Unauthorized");
 		}
 		List<Issue> retrievedIssue = (List<Issue>) restClient.getSearchClient()
@@ -303,72 +356,89 @@ public class JiraServiceImpl implements JiraService {
 	}
 
 	@Override
-	public String getUpdateDate(String issue, String project) {
-		if (restClient == null) {
+	public String getUpdateDate( String issue, String project )
+	{
+		if( restClient == null )
+		{
 			throw new DataException("403", "Unauthorized");
 		}
 		List<Issue> retrievedIssue = (List<Issue>) restClient.getSearchClient()
 				.searchJql("project=" + project + " and issue = " + issue).claim().getIssues();
-		if (retrievedIssue.get(0).getUpdateDate() == null) {
+		if( retrievedIssue.get(0).getUpdateDate() == null )
+		{
 			return null;
 		}
 		return retrievedIssue.get(0).getUpdateDate().toString();
 	}
 
 	@Override
-	public String getDueDate(String issue, String project) {
-		if (restClient == null) {
+	public String getDueDate( String issue, String project )
+	{
+		if( restClient == null )
+		{
 			throw new DataException("403", "Unauthorized");
 		}
 		List<Issue> retrievedIssue = (List<Issue>) restClient.getSearchClient()
 				.searchJql("project=" + project + " and issue = " + issue).claim().getIssues();
-		if (retrievedIssue.get(0).getDueDate() == null) {
+		if( retrievedIssue.get(0).getDueDate() == null )
+		{
 			return null;
 		}
 		return retrievedIssue.get(0).getDueDate().toString();
 	}
 
 	@Override
-	public String getPriority(String issue, String project) {
-		if (restClient == null) {
+	public String getPriority( String issue, String project )
+	{
+		if( restClient == null )
+		{
 			throw new DataException("403", "Unauthorized");
 		}
 		List<Issue> retrievedIssue = (List<Issue>) restClient.getSearchClient()
 				.searchJql("project=" + project + " and issue = " + issue).claim().getIssues();
-		if (retrievedIssue.get(0).getPriority() == null) {
+		if( retrievedIssue.get(0).getPriority() == null )
+		{
 			return null;
 		}
 		return retrievedIssue.get(0).getPriority().getName();
 	}
 
 	@Override
-	public String getVotes(String issue, String project) {
-		if (restClient == null) {
+	public String getVotes( String issue, String project )
+	{
+		if( restClient == null )
+		{
 			throw new DataException("403", "Unauthorized");
 		}
 		List<Issue> retrievedIssue = (List<Issue>) restClient.getSearchClient()
 				.searchJql("project=" + project + " and issue = " + issue).claim().getIssues();
-		if (retrievedIssue.get(0).getVotes() == null) {
+		if( retrievedIssue.get(0).getVotes() == null )
+		{
 			return null;
 		}
 		return String.valueOf(retrievedIssue.get(0).getVotes().getVotes());
 	}
 
 	@Override
-	public String getFixVersions(String issue, String project) {
-		if (restClient == null) {
+	public String getFixVersions( String issue, String project )
+	{
+		if( restClient == null )
+		{
 			throw new DataException("403", "Unauthorized");
 		}
 		StringBuilder versions = new StringBuilder("");
 		List<Issue> retrievedIssue = (List<Issue>) restClient.getSearchClient()
 				.searchJql("project=" + project + " and issue = " + issue).claim().getIssues();
 		List<Version> retrievedFixVersions = (List<Version>) retrievedIssue.get(0).getFixVersions();
-		if (retrievedFixVersions.isEmpty()) {
+		if( retrievedFixVersions.isEmpty() )
+		{
 			return null;
 		}
 		int i = 0;
-		for (Version version : retrievedFixVersions) {
-			if (i != 0) {
+		for( Version version : retrievedFixVersions )
+		{
+			if( i != 0 )
+			{
 				versions.append(", ");
 			}
 			versions.append(version.getName());
@@ -378,25 +448,33 @@ public class JiraServiceImpl implements JiraService {
 	}
 
 	@Override
-	public String getComments(String issue, String project) {
-		if (restClient == null) {
+	public String getComments( String issue, String project )
+	{
+		if( restClient == null )
+		{
 			throw new DataException("403", "Unauthorized");
 		}
 		StringBuilder comments = new StringBuilder("");
 		IssueRestClient issueClient = restClient.getIssueClient();
 		Promise<Issue> retrievedIssue = issueClient.getIssue(issue);
 		List<Comment> retrievedComments;
-		try {
+		try
+		{
 			retrievedComments = (List<Comment>) retrievedIssue.get().getComments();
-		} catch (InterruptedException | ExecutionException e) {
+		}
+		catch( InterruptedException | ExecutionException e )
+		{
 			return null;
 		}
-		if (retrievedComments.isEmpty()) {
+		if( retrievedComments.isEmpty() )
+		{
 			return null;
 		}
 		int i = 0;
-		for (Comment comment : retrievedComments) {
-			if (i != 0) {
+		for( Comment comment : retrievedComments )
+		{
+			if( i != 0 )
+			{
 				comments.append(",\n");
 			}
 			comments.append(comment.getAuthor().getName() + " : " + comment.getBody());
@@ -406,50 +484,64 @@ public class JiraServiceImpl implements JiraService {
 	}
 
 	@Override
-	public String getWatchers(String issue, String project) {
-		if (restClient == null) {
+	public String getWatchers( String issue, String project )
+	{
+		if( restClient == null )
+		{
 			throw new DataException("403", "Unauthorized");
 		}
 		List<Issue> retrievedIssue = (List<Issue>) restClient.getSearchClient()
 				.searchJql("project=" + project + " and issue = " + issue).claim().getIssues();
-		if (retrievedIssue.get(0).getWatchers() == null) {
+		if( retrievedIssue.get(0).getWatchers() == null )
+		{
 			return null;
 		}
 		return String.valueOf(retrievedIssue.get(0).getWatchers().getNumWatchers());
 	}
 
 	@Override
-	public String getLabels(String issue, String project) {
-		if (restClient == null) {
+	public String getLabels( String issue, String project )
+	{
+		if( restClient == null )
+		{
 			throw new DataException("403", "Unauthorized");
 		}
 		StringBuilder labels = new StringBuilder("");
 		List<Issue> retrievedIssue = (List<Issue>) restClient.getSearchClient()
 				.searchJql("project=" + project + " and issue = " + issue).claim().getIssues();
 		Set<String> retrievedLabels = retrievedIssue.get(0).getLabels();
-		if (retrievedLabels.isEmpty()) {
+		if( retrievedLabels.isEmpty() )
+		{
 			return null;
 		}
 		int i = 0;
-		for (String label : retrievedLabels) {
-			if (i != 0) {
+		for( String label : retrievedLabels )
+		{
+			if( i != 0 )
+			{
 				labels.append(", ");
 			}
 			labels.append(label);
 			i++;
 		}
 		return labels.toString();
-
 	}
 
 	@Override
-	public List<JiraIssue> getJqlResult(String jqlValue) {
+	public List<JiraIssue> getJqlResult( String jqlValue )
+	{
+		if( restClient == null )
+		{
+			throw new DataException("403", "Unauthorized");
+		}
 		List<JiraIssue> issues = new ArrayList<>();
 		Iterable<Issue> retrievedissue = restClient.getSearchClient().searchJql(jqlValue).claim().getIssues();
-		for (Issue issueValue : retrievedissue) {
+		for( Issue issueValue : retrievedissue )
+		{
 			Promise<Issue> issue = restClient.getIssueClient().getIssue(issueValue.getKey());
 			JiraIssue jiraIssue = new JiraIssue();
-			try {
+			try
+			{
 				jiraIssue.setKey(issue.get().getKey());
 				jiraIssue.setStatus(issue.get().getStatus().getName());
 				jiraIssue.setIssueType(issue.get().getIssueType().getName());
@@ -457,106 +549,153 @@ public class JiraServiceImpl implements JiraService {
 				jiraIssue.setSummary(issue.get().getSummary());
 				jiraIssue.setDescription(issue.get().getDescription());
 				jiraIssue.setReporter(issue.get().getReporter().getName());
-				if (issue.get().getAssignee() != null) {
+				if( issue.get().getAssignee() != null )
+				{
 					jiraIssue.setAssignee(issue.get().getAssignee().getName());
-				} else {
+				}
+				else
+				{
 					jiraIssue.setAssignee("Unassigned");
 				}
-				if (issue.get().getResolution() != null) {
+				if( issue.get().getResolution() != null )
+				{
 					jiraIssue.setResolution(issue.get().getResolution().getName());
-				} else {
+				}
+				else
+				{
 					jiraIssue.setResolution("Unresolved");
 				}
 				jiraIssue.setCreationDate(issue.get().getCreationDate().toString());
-				if (issue.get().getUpdateDate() != null) {
+				if( issue.get().getUpdateDate() != null )
+				{
 					jiraIssue.setUpdateDate(issue.get().getUpdateDate().toString());
-				} else {
+				}
+				else
+				{
 					jiraIssue.setUpdateDate("null");
 				}
-				if (issue.get().getDueDate() != null) {
+				if( issue.get().getDueDate() != null )
+				{
 					jiraIssue.setUpdateDate(issue.get().getDueDate().toString());
-				} else {
+				}
+				else
+				{
 					jiraIssue.setDueDate("null");
 				}
-				if (issue.get().getPriority() != null) {
+				if( issue.get().getPriority() != null )
+				{
 					jiraIssue.setPriority(issue.get().getPriority().getName());
-				} else {
+				}
+				else
+				{
 					jiraIssue.setPriority("null");
 				}
-				if (issue.get().getComponents() != null) {
+				if( issue.get().getComponents() != null )
+				{
 					List<String> jiraComponents = new ArrayList<>();
-					for (BasicComponent component : issue.get().getComponents()) {
+					for( BasicComponent component : issue.get().getComponents() )
+					{
 						jiraComponents.add(component.getName());
 					}
 					jiraIssue.setComponents(jiraComponents);
 
-				} else {
+				}
+				else
+				{
 					jiraIssue.setComponents(null);
 				}
-				if (issue.get().getComments() != null) {
+				if( issue.get().getComments() != null )
+				{
 					List<String> jiraComments = new ArrayList<>();
-					for (Comment comment : issue.get().getComments()) {
+					for( Comment comment : issue.get().getComments() )
+					{
 						jiraComments.add(comment.getAuthor().getName() + " : " + comment.getBody());
 					}
 					jiraIssue.setComments(jiraComments);
 
-				} else {
+				}
+				else
+				{
 					jiraIssue.setComments(null);
 				}
-				if (issue.get().getFixVersions() != null) {
+				if( issue.get().getFixVersions() != null )
+				{
 					List<String> jiraFixVersions = new ArrayList<>();
-					for (Version version : issue.get().getFixVersions()) {
+					for( Version version : issue.get().getFixVersions() )
+					{
 						jiraFixVersions.add(version.getName());
 					}
 					jiraIssue.setFixVersions(jiraFixVersions);
 
-				} else {
+				}
+				else
+				{
 					jiraIssue.setFixVersions(null);
 				}
-				if (issue.get().getAffectedVersions() != null) {
+				if( issue.get().getAffectedVersions() != null )
+				{
 					List<String> jiraAffectedVersions = new ArrayList<>();
-					for (Version version : issue.get().getAffectedVersions()) {
+					for( Version version : issue.get().getAffectedVersions() )
+					{
 						jiraAffectedVersions.add(version.getName());
 					}
 					jiraIssue.setAffectedVersions(jiraAffectedVersions);
 
-				} else {
+				}
+				else
+				{
 					jiraIssue.setFixVersions(null);
 				}
-				if (issue.get().getIssueLinks() != null) {
+				if( issue.get().getIssueLinks() != null )
+				{
 					List<String> jiraIssueLinks = new ArrayList<>();
-					for (IssueLink issueLink : issue.get().getIssueLinks()) {
+					for( IssueLink issueLink : issue.get().getIssueLinks() )
+					{
 						jiraIssueLinks.add(issueLink.getIssueLinkType().getName());
 					}
 					jiraIssue.setIssueLinks(jiraIssueLinks);
 
-				} else {
+				}
+				else
+				{
 					jiraIssue.setIssueLinks(null);
 				}
-				if (issue.get().getLabels() != null) {
+				if( issue.get().getLabels() != null )
+				{
 					jiraIssue.setLabels(issue.get().getLabels());
 
-				} else {
+				}
+				else
+				{
 					jiraIssue.setLabels(null);
 				}
-				if (!NullEmptyUtils.isNullorEmpty((List<?>) issue.get().getFields())) {
-					if (issue.get().getFieldByName("Epic Link") != null
-							&& issue.get().getFieldByName("Epic Link").getValue() != null) {
+				if( !NullEmptyUtils.isNullorEmpty((List<?>) issue.get().getFields()) )
+				{
+					if( issue.get().getFieldByName("Epic Link") != null
+							&& issue.get().getFieldByName("Epic Link").getValue() != null )
+					{
 						jiraIssue.setEpicLink(issue.get().getFieldByName("Epic Link").getValue().toString());
-					} else {
+					}
+					else
+					{
 						jiraIssue.setEpicLink("null");
 					}
-					if (issue.get().getFieldByName("Sprint") != null
-							&& issue.get().getFieldByName("Sprint").getValue() != null) {
+					if( issue.get().getFieldByName("Sprint") != null
+							&& issue.get().getFieldByName("Sprint").getValue() != null )
+					{
 						jiraIssue.setSprint(issue.get().getFieldByName("Sprint").getValue().toString());
-					} else {
+					}
+					else
+					{
 						jiraIssue.setSprint("null");
 					}
 				}
 				jiraIssue.setTimeTracking(issue.get().getTimeTracking());
-				if (issue.get().getSubtasks() != null) {
+				if( issue.get().getSubtasks() != null )
+				{
 					List<JiraSubtask> subtask = new ArrayList<>();
-					for (Subtask subtasks : issue.get().getSubtasks()) {
+					for( Subtask subtasks : issue.get().getSubtasks() )
+					{
 						JiraSubtask task = new JiraSubtask();
 						task.setIssueKey(subtasks.getIssueKey());
 						task.setIssueType(subtasks.getIssueType().getName());
@@ -566,12 +705,15 @@ public class JiraServiceImpl implements JiraService {
 					}
 					jiraIssue.setSubtasks(subtask);
 
-				} else {
+				}
+				else
+				{
 					jiraIssue.setIssueLinks(null);
 				}
 				issues.add(jiraIssue);
-			} catch (Exception e) {
-				e.printStackTrace();
+			}
+			catch( Exception e )
+			{
 				return null;
 			}
 		}
@@ -579,59 +721,62 @@ public class JiraServiceImpl implements JiraService {
 	}
 
 	@Override
-	public List<JiraIssue> getAllIssues(List<String> commandToken) {
+	public List<JiraIssue> getAllIssues( List<String> commandToken )
+	{
 		StringBuilder jqlValue = new StringBuilder("");
 		ListIterator<String> iterator = commandToken.listIterator();
-		while (iterator.hasNext()) {
-			switch (iterator.next()) {
-			case "--status":
-				jqlValue.append(" status = '").append(iterator.next()).append("' AND ");
-				break;
-			case "--issuetype":
-				jqlValue.append(" issuetype = '").append(iterator.next()).append("' AND ");
-				break;
-			case "--component":
-				jqlValue.append(" component = '").append(iterator.next()).append("' AND ");
-				break;
-			case "--description":
-				jqlValue.append(" description ~ '").append(iterator.next()).append("'AND ");
-				break;
-			case "--reporter":
-				jqlValue.append(" reporter = '").append(iterator.next()).append("' AND ");
-				break;
-			case "--assignee":
-				jqlValue.append(" assignee = '").append(iterator.next()).append("' AND ");
-				break;
-			case "--resolution":
-				jqlValue.append(" resolution = '").append(iterator.next()).append("' AND ");
-				break;
-			case "--createdDate":
-				jqlValue.append(" createdDate = ").append(iterator.next()).append(" AND ");
-				break;
-			case "--updatedDate":
-				jqlValue.append(" updatedDate = ").append(iterator.next()).append(" AND ");
-				break;
-			case "--duedate":
-				jqlValue.append(" duedate = ").append(iterator.next()).append(" AND ");
-				break;
-			case "--priority":
-				jqlValue.append(" priority = ").append(iterator.next()).append(" AND ");
-				break;
-			case "--fixVersion":
-				jqlValue.append(" fixVersion = ").append(iterator.next()).append(" AND ");
-				break;
-			case "--sprint":
-				jqlValue.append(" Sprint = '").append(iterator.next()).append("' AND ");
-				break;
-			case "--labels":
-				jqlValue.append(" labels = '").append(iterator.next()).append("' AND ");
-				break;
-			case "--issue":
-				jqlValue.append(" issue = '").append(iterator.next()).append("' AND ");
-				break;
-			case "--project":
-				jqlValue.append(" project = '").append(iterator.next()).append("'");
-				break;
+		while( iterator.hasNext() )
+		{
+			switch ( iterator.next() )
+			{
+				case "--status" :
+					jqlValue.append(" status = ").append(iterator.next()).append(" AND ");
+					break;
+				case "--issuetype" :
+					jqlValue.append(" issuetype = ").append(iterator.next()).append(" AND ");
+					break;
+				case "--component" :
+					jqlValue.append(" component = ").append(iterator.next()).append(" AND ");
+					break;
+				case "--description" :
+					jqlValue.append(" description ~ ").append(iterator.next()).append(" AND ");
+					break;
+				case "--reporter" :
+					jqlValue.append(" reporter = ").append(iterator.next()).append(" AND ");
+					break;
+				case "--assignee" :
+					jqlValue.append(" assignee = ").append(iterator.next()).append(" AND ");
+					break;
+				case "--resolution" :
+					jqlValue.append(" resolution = ").append(iterator.next()).append(" AND ");
+					break;
+				case "--createdDate" :
+					jqlValue.append(" createdDate = ").append(iterator.next()).append(" AND ");
+					break;
+				case "--updatedDate" :
+					jqlValue.append(" updatedDate = ").append(iterator.next()).append(" AND ");
+					break;
+				case "--duedate" :
+					jqlValue.append(" duedate = ").append(iterator.next()).append(" AND ");
+					break;
+				case "--priority" :
+					jqlValue.append(" priority = ").append(iterator.next()).append(" AND ");
+					break;
+				case "--fixVersion" :
+					jqlValue.append(" fixVersion = ").append(iterator.next()).append(" AND ");
+					break;
+				case "--sprint" :
+					jqlValue.append(" Sprint = ").append(iterator.next()).append(" AND ");
+					break;
+				case "--labels" :
+					jqlValue.append(" labels = ").append(iterator.next()).append(" AND ");
+					break;
+				case "--issue" :
+					jqlValue.append(" issue = ").append(iterator.next()).append(" AND ");
+					break;
+				case "--project" :
+					jqlValue.append(" project = ").append(iterator.next());
+					break;
 			}
 		}
 		List<JiraIssue> issues = getJqlResult(jqlValue.toString());
@@ -639,7 +784,8 @@ public class JiraServiceImpl implements JiraService {
 	}
 
 	@Override
-	public String getHelp() {
+	public String getHelp()
+	{
 		return help;
 	}
 
