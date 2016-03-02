@@ -155,6 +155,25 @@
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
+	<repositories>
+		<repository>
+			<id>opencast-public</id>
+			<url>http://repository.opencastproject.org/nexus/content/repositories/public/</url>
+		</repository>
+		<repository>
+			<id>atlassian-public</id>
+			<url>https://maven.atlassian.com/public</url>
+			<snapshots>
+				<enabled>true</enabled>
+				<updatePolicy>daily</updatePolicy>
+				<checksumPolicy>warn</checksumPolicy>
+			</snapshots>
+			<releases>
+				<enabled>true</enabled>
+				<checksumPolicy>warn</checksumPolicy>
+			</releases>
+		</repository>
+	</repositories>
 	<build>
 		<finalName>jira-cli</finalName>
 		<resources>
