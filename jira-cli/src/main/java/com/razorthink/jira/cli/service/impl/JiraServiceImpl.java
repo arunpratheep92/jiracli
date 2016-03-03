@@ -651,7 +651,7 @@ public class JiraServiceImpl implements JiraService {
 					List<String> jiraIssueLinks = new ArrayList<>();
 					for( IssueLink issueLink : issue.get().getIssueLinks() )
 					{
-						jiraIssueLinks.add(issueLink.getIssueLinkType().getName());
+						jiraIssueLinks.add(issueLink.getTargetIssueKey());
 					}
 					jiraIssue.setIssueLinks(jiraIssueLinks);
 
