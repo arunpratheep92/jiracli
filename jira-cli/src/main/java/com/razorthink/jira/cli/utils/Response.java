@@ -1,17 +1,19 @@
-package com.razorthink.jira.cli.exception;
+package com.razorthink.jira.cli.utils;
 
-public class DataException extends RuntimeException {
+public class Response {
 
-	private static final long serialVersionUID = 1L;
+	private Object object;
 	private String errorCode;
 	private String errorMessage;
 
-	public DataException( String errorCode, String errorMessage )
+	public Object getObject()
 	{
-		super(errorMessage);
-		this.errorMessage = errorMessage;
-		this.errorCode = errorCode;
+		return object;
+	}
 
+	public void setObject( Object object )
+	{
+		this.object = object;
 	}
 
 	public String getErrorCode()
