@@ -36,7 +36,7 @@ public class UserReportRestService {
 			AggregateUserReport report = userReporService.getUserReport(params, restClient);
 			response.setErrorCode(null);
 			response.setErrorMessage(null);
-			response.setObject(report);
+			response.setObject(report.getFilepath());
 			return new ResponseEntity(response, HttpStatus.OK);
 		}
 		catch( DataException e )

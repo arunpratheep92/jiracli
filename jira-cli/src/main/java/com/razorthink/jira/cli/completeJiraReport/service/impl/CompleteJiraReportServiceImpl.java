@@ -32,7 +32,7 @@ public class CompleteJiraReportServiceImpl implements CompleteJiraReportService 
 	 * @see com.razorthink.jira.cli.completeJiraReport.service.impl.CompleteJiraReportService#getCompleteJiraReport(java.lang.String, com.atlassian.jira.rest.client.api.JiraRestClient)
 	 */
 	@Override
-	public List<JiraReportIssue> getCompleteJiraReport( Map<String, String> params, JiraRestClient restClient )
+	public String getCompleteJiraReport( Map<String, String> params, JiraRestClient restClient )
 	{
 		logger.debug("getCompleteJiraReport");
 		String jql = null;
@@ -158,11 +158,11 @@ public class CompleteJiraReportServiceImpl implements CompleteJiraReportService 
 				throw new DataException(HttpStatus.INTERNAL_SERVER_ERROR.toString(), e.getMessage());
 			}
 		}
+		String filename = project + "_complete_dump_" + startAt + "_to_" + maxResults + ".csv";
+		filename = filename.replace(" ", "_");
 		ConvertToCSV exportToCSV = new ConvertToCSV();
-		exportToCSV.exportToCSV(
-				env.getProperty("csv.filename") + project + "_complete_dump_" + startAt + "_to_" + maxResults + ".csv",
-				report);
-		return report;
+		exportToCSV.exportToCSV(env.getProperty("csv.filename") + filename, report);
+		return env.getProperty("csv.aliaspath") + filename;
 	}
 
 }

@@ -1,6 +1,5 @@
 package com.razorthink.jira.cli.rest;
 
-import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -11,7 +10,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import com.atlassian.jira.rest.client.api.JiraRestClient;
 import com.razorthink.jira.cli.backlog.service.BacklogReportService;
-import com.razorthink.jira.cli.domain.UserReport;
 import com.razorthink.jira.cli.exception.DataException;
 import com.razorthink.jira.cli.login.service.LoginService;
 import com.razorthink.jira.cli.utils.Response;
@@ -34,7 +32,7 @@ public class BacklogReportRestService {
 		try
 		{
 			JiraRestClient restClient = loginService.getRestClient();
-			List<UserReport> report = backlogReportService.getBacklogReport(params, restClient);
+			String report = backlogReportService.getBacklogReport(params, restClient);
 			response.setErrorCode(null);
 			response.setErrorMessage(null);
 			response.setObject(report);

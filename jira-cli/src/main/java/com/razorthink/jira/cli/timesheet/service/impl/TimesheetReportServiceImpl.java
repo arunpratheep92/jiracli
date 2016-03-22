@@ -33,7 +33,7 @@ public class TimesheetReportServiceImpl implements TimesheetReportService {
 	 * @see com.razorthink.jira.cli.timesheet.service.impl.TimesheetReportService#getTimesheetReport(java.util.Map, com.atlassian.jira.rest.client.api.JiraRestClient)
 	 */
 	@Override
-	public List<TimesheetReport> getTimesheetReport( Map<String, String> params, JiraRestClient restClient )
+	public String getTimesheetReport( Map<String, String> params, JiraRestClient restClient )
 	{
 		logger.debug("getTimesheetReport");
 		String sprint = params.get("sprint");
@@ -73,8 +73,10 @@ public class TimesheetReportServiceImpl implements TimesheetReportService {
 				throw new DataException(HttpStatus.INTERNAL_SERVER_ERROR.toString(), e.getMessage());
 			}
 		}
+		String filename = project + "_" + sprint + "_timesheet.csv";
+		filename = filename.replace(" ", "_");
 		ConvertToCSV exportToCSV = new ConvertToCSV();
-		exportToCSV.exportToCSV(env.getProperty("csv.filename") + project + "_" + sprint + "_timesheet.csv", report);
-		return report;
+		exportToCSV.exportToCSV(env.getProperty("csv.filename") + filename, report);
+		return env.getProperty("csv.aliaspath") + filename;
 	}
 }

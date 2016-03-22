@@ -35,8 +35,7 @@ public class SprintRetrospectionReportServiceImpl implements SprintRetrospection
 	 * @see com.razorthink.jira.cli.sprintRetrospectionReport.service.impl.SprintRetrospectionReportService#getSprintRetrospectionReport(java.util.Map, com.atlassian.jira.rest.client.api.JiraRestClient)
 	 */
 	@Override
-	public List<SprintRetrospection> getSprintRetrospectionReport( Map<String, String> params,
-			JiraRestClient restClient )
+	public String getSprintRetrospectionReport( Map<String, String> params, JiraRestClient restClient )
 	{
 		logger.debug("getSprintRetrospectionReport");
 		String project = params.get("project");
@@ -138,9 +137,10 @@ public class SprintRetrospectionReportServiceImpl implements SprintRetrospection
 				assignee.add(issueValue.getAssignee().getDisplayName());
 			}
 		}
+		String filename = project + "_" + sprint + "_retrospection_report.csv";
+		filename = filename.replace(" ", "_");
 		ConvertToCSV exportToCSV = new ConvertToCSV();
-		exportToCSV.exportToCSV(env.getProperty("csv.filename") + project + "_" + sprint + "_retrospection_report.csv",
-				sprintRetrospectionReport);
-		return sprintRetrospectionReport;
+		exportToCSV.exportToCSV(env.getProperty("csv.filename") + filename, sprintRetrospectionReport);
+		return env.getProperty("csv.aliaspath") + filename;
 	}
 }

@@ -1,6 +1,5 @@
 package com.razorthink.jira.cli.rest;
 
-import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -10,7 +9,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import com.atlassian.jira.rest.client.api.JiraRestClient;
-import com.razorthink.jira.cli.domain.SprintRetrospection;
 import com.razorthink.jira.cli.exception.DataException;
 import com.razorthink.jira.cli.login.service.LoginService;
 import com.razorthink.jira.cli.sprintRetrospectionReport.service.SprintRetrospectionReportService;
@@ -34,7 +32,7 @@ public class SprintRetrospectionRestService {
 		try
 		{
 			JiraRestClient restClient = loginService.getRestClient();
-			List<SprintRetrospection> report = sprintRetrospectionReportService.getSprintRetrospectionReport(params,
+			String report = sprintRetrospectionReportService.getSprintRetrospectionReport(params,
 					restClient);
 			response.setErrorCode(null);
 			response.setErrorMessage(null);

@@ -4,6 +4,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.List;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -102,7 +103,10 @@ public class ConvertToCSV {
 						{
 							Object value = field.get(object);
 							if( value != null )
-								fileWriter.append('`' + value.toString() + '`');
+							{
+								String escaped = StringEscapeUtils.escapeCsv(value.toString());
+								fileWriter.append(escaped);
+							}
 							else
 								fileWriter.append("null");
 							fileWriter.append(COMMA_DELIMITER);
@@ -111,7 +115,7 @@ public class ConvertToCSV {
 						{
 							Object value = field.get(object);
 							if( value != null )
-								fileWriter.append('`' + value.toString() + '`');
+								fileWriter.append(value.toString());
 							else
 								fileWriter.append("null");
 							fileWriter.append(COMMA_DELIMITER);
@@ -120,7 +124,7 @@ public class ConvertToCSV {
 						{
 							Object value = field.get(object);
 							if( value != null )
-								fileWriter.append('`' + value.toString() + '`');
+								fileWriter.append(value.toString());
 							else
 								fileWriter.append("null");
 							fileWriter.append(COMMA_DELIMITER);
@@ -135,7 +139,7 @@ public class ConvertToCSV {
 								Object value1 = subField.get(value2);
 								if( value1 != null )
 								{
-									fileWriter.append('`' + value1.toString() + '`');
+									fileWriter.append(value1.toString());
 								}
 								else
 									fileWriter.append("null");

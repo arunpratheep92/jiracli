@@ -32,7 +32,7 @@ public class SprintReportServiceImpl implements SprintReportService {
 	 * @see com.razorthink.jira.cli.sprintReport.service.impl.SprintReport#getSprintReport(java.util.Map, com.atlassian.jira.rest.client.api.JiraRestClient)
 	 */
 	@Override
-	public HashMap<String, AggregateUserReport> getSprintReport( Map<String, String> params, JiraRestClient restClient )
+	public String getSprintReport( Map<String, String> params, JiraRestClient restClient )
 	{
 		logger.debug("getSprintReport");
 		String sprint = params.get("sprint");
@@ -61,8 +61,10 @@ public class SprintReportServiceImpl implements SprintReportService {
 				}
 			}
 		}
+		String filename = project + "_" + sprint + ".csv";
+		filename = filename.replace(" ", "_");
 		ConvertToCSV exportToCSV = new ConvertToCSV();
-		exportToCSV.exportToCSV(env.getProperty("csv.filename") + project + "_" + sprint + ".csv", issueList);
-		return sprintReport;
+		exportToCSV.exportToCSV(env.getProperty("csv.filename") + filename, issueList);
+		return env.getProperty("csv.aliaspath") + filename;
 	}
 }

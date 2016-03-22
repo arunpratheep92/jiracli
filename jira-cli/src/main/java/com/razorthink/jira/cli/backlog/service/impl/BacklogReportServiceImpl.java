@@ -32,7 +32,7 @@ public class BacklogReportServiceImpl implements BacklogReportService {
 	 * @see com.razorthink.jira.cli.backlog.service.impl.BacklogReportService#getBacklogReport(java.util.Map, com.atlassian.jira.rest.client.api.JiraRestClient)
 	 */
 	@Override
-	public List<UserReport> getBacklogReport( Map<String, String> params, JiraRestClient restClient )
+	public String getBacklogReport( Map<String, String> params, JiraRestClient restClient )
 	{
 		logger.debug("getBacklogReport");
 		String project = params.get("project");
@@ -142,8 +142,10 @@ public class BacklogReportServiceImpl implements BacklogReportService {
 				throw new DataException(HttpStatus.INTERNAL_SERVER_ERROR.toString(), e.getMessage());
 			}
 		}
+		String filename = project + "_backlog.csv";
+		filename = filename.replace(" ", "_");
 		ConvertToCSV exportToCSV = new ConvertToCSV();
-		exportToCSV.exportToCSV(env.getProperty("csv.filename") + project + "_backlog.csv", issueList);
-		return issueList;
+		exportToCSV.exportToCSV(env.getProperty("csv.filename") + filename, issueList);
+		return env.getProperty("csv.aliaspath") + filename;
 	}
 }

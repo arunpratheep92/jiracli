@@ -169,9 +169,11 @@ public class UserReportServiceImpl implements UserReportService {
 		}
 		if( export.equals("true") )
 		{
+			String filename = project + "_" + sprint + "_" + user + ".csv";
+			filename = filename.replace(" ", "_");
 			ConvertToCSV exportToCSV = new ConvertToCSV();
-			exportToCSV.exportToCSV(env.getProperty("csv.filename") + project + "_" + sprint + "_" + user + ".csv",
-					issueList);
+			exportToCSV.exportToCSV(env.getProperty("csv.filename") + filename, issueList);
+			report.setFilepath(env.getProperty("csv.aliaspath") + filename);
 		}
 		report.setIssues(issueList);
 		Pattern patter = Pattern

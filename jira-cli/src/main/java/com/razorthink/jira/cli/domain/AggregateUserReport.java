@@ -12,6 +12,7 @@ public class AggregateUserReport {
 	private Integer estimatedHours;
 	private Integer actualHours;
 	private Integer totalTasks;
+	private String filepath;
 
 	public List<UserReport> getIssues()
 	{
@@ -91,6 +92,16 @@ public class AggregateUserReport {
 	public void setTotalTasks( Integer totalTasks )
 	{
 		this.totalTasks = totalTasks;
+	}
+
+	public String getFilepath()
+	{
+		return filepath;
+	}
+
+	public void setFilepath( String filepath )
+	{
+		this.filepath = filepath;
 	}
 
 }
