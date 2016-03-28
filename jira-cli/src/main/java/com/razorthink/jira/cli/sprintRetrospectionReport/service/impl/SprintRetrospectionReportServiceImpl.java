@@ -46,8 +46,8 @@ public class SprintRetrospectionReportServiceImpl implements SprintRetrospection
 		logger.debug("getSprintRetrospectionReport");
 		String project = params.get("project");
 		String sprint = params.get("sprint");
-		int rvId = Integer.parseInt(params.get("rapidviewId"));
-		int sprintId = Integer.parseInt(params.get("sprintId"));
+		int rvId = 0;
+		int sprintId = 0;
 		Double actualHours = 0.0;
 		Double estimatedHours = 0.0;
 		Integer totalTasks = 0;
@@ -63,6 +63,17 @@ public class SprintRetrospectionReportServiceImpl implements SprintRetrospection
 			logger.error("Error: Missing required paramaters");
 			throw new DataException(HttpStatus.BAD_REQUEST.toString(), "Missing required paramaters");
 		}
+		Iterable<Issue> retrievedIssue = restClient.getSearchClient().searchJql(" sprint = '" + sprint
+				+ "' AND project = '" + project + "' AND assignee is not EMPTY ORDER BY assignee", 1000, 0, null)
+				.claim().getIssues();
+		Pattern pattern = Pattern.compile("\\[\".*\\[id=(.*),rapidViewId=(.*),.*,name=(.*),startDate=(.*),.*\\]");
+		Matcher matcher = pattern
+				.matcher(retrievedIssue.iterator().next().getFieldByName("Sprint").getValue().toString());
+		if( matcher.find() )
+		{
+			sprintId = Integer.parseInt(matcher.group(1));
+			rvId = Integer.parseInt(matcher.group(2));
+		}
 		try
 		{
 			IncompletedIssues incompletedIssues = IncompletedIssues.get(jiraClient.getRestClient(), rvId, sprintId);
@@ -76,9 +87,6 @@ public class SprintRetrospectionReportServiceImpl implements SprintRetrospection
 			logger.error("Error:" + e.getMessage());
 			throw new DataException(HttpStatus.INTERNAL_SERVER_ERROR.toString(), e.getMessage());
 		}
-		Iterable<Issue> retrievedIssue = restClient.getSearchClient().searchJql(" sprint = '" + sprint
-				+ "' AND project = '" + project + "' AND assignee is not EMPTY ORDER BY assignee", 1000, 0, null)
-				.claim().getIssues();
 		for( Issue issueValue : retrievedIssue )
 		{
 			if( !assignee.contains(issueValue.getAssignee().getDisplayName()) )
@@ -122,9 +130,9 @@ public class SprintRetrospectionReportServiceImpl implements SprintRetrospection
 				}
 				if( assignee.isEmpty() )
 				{
-					Pattern pattern = Pattern.compile(
+					pattern = Pattern.compile(
 							"\\[\".*\\[.*,state=(.*),name=(.*),startDate=(.*),endDate=(.*),completeDate=(.*),.*\\]");
-					Matcher matcher = pattern.matcher(dateValue);
+					matcher = pattern.matcher(dateValue);
 					if( matcher.find() )
 					{
 						DateTime startDt = new DateTime(matcher.group(3));

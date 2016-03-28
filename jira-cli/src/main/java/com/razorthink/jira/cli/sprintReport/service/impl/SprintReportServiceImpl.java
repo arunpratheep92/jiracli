@@ -50,14 +50,27 @@ public class SprintReportServiceImpl implements SprintReportService {
 		logger.debug("getSprintReport");
 		String sprint = params.get("sprint");
 		String project = params.get("project");
-		int rvId = Integer.parseInt(params.get("rapidviewId"));
-		int sprintId = Integer.parseInt(params.get("sprintId"));
+		if( project == null || sprint == null )
+		{
+			logger.error("Error: Missing required paramaters");
+			throw new DataException(HttpStatus.BAD_REQUEST.toString(), "Missing required paramaters");
+		}
+		int rvId = 0;
+		int sprintId = 0;
 		String assignee = null;
 		AggregateUserReport aggregateUserReport = new AggregateUserReport();
 		List<UserReport> issueList = new ArrayList<>();
 		HashMap<String, AggregateUserReport> sprintReport = new HashMap<>();
 		Iterable<Issue> retrievedIssue = restClient.getSearchClient()
 				.searchJql(" sprint = '" + sprint + "' AND project = '" + project + "'").claim().getIssues();
+		Pattern pattern = Pattern.compile("\\[\".*\\[id=(.*),rapidViewId=(.*),.*,name=(.*),startDate=(.*),.*\\]");
+		Matcher matcher = pattern
+				.matcher(retrievedIssue.iterator().next().getFieldByName("Sprint").getValue().toString());
+		if( matcher.find() )
+		{
+			sprintId = Integer.parseInt(matcher.group(1));
+			rvId = Integer.parseInt(matcher.group(2));
+		}
 		for( Issue issue : retrievedIssue )
 		{
 			if( issue.getAssignee() != null )
@@ -163,21 +176,7 @@ public class SprintReportServiceImpl implements SprintReportService {
 						{
 							userReport.setEpicLink("null");
 						}
-						if( issue.get().getFieldByName("Sprint") != null
-								&& issue.get().getFieldByName("Sprint").getValue() != null )
-						{
-							Pattern pattern = Pattern.compile("\\[\".*\\[.*,name=(.*),startDate=(.*),.*\\]");
-							Matcher matcher = pattern
-									.matcher(issue.get().getFieldByName("Sprint").getValue().toString());
-							if( matcher.find() )
-							{
-								userReport.setSprint(matcher.group(1));
-							}
-						}
-						else
-						{
-							userReport.setSprint("null");
-						}
+						userReport.setSprint(sprint);
 					}
 					issueList.add(userReport);
 				}
@@ -272,9 +271,8 @@ public class SprintReportServiceImpl implements SprintReportService {
 						if( issue.get().getFieldByName("Sprint") != null
 								&& issue.get().getFieldByName("Sprint").getValue() != null )
 						{
-							Pattern pattern = Pattern.compile("\\[\".*\\[.*,name=(.*),startDate=(.*),.*\\]");
-							Matcher matcher = pattern
-									.matcher(issue.get().getFieldByName("Sprint").getValue().toString());
+							pattern = Pattern.compile("\\[\".*\\[.*,name=(.*),startDate=(.*),.*\\]");
+							matcher = pattern.matcher(issue.get().getFieldByName("Sprint").getValue().toString());
 							if( matcher.find() )
 							{
 								userReport.setSprint(matcher.group(1));
