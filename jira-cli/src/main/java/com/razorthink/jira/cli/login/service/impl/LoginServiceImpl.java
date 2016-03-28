@@ -33,6 +33,10 @@ public class LoginServiceImpl implements LoginService {
 		String username = params.get("username");
 		String password = params.get("password");
 		String url = params.get("url");
+		if( username == null || password == null || url == null )
+		{
+			throw new DataException(HttpStatus.BAD_REQUEST.name(), "Parameters cannot be null");
+		}
 		try
 		{
 			restClient = js.authorize(url, username, password);
@@ -52,15 +56,10 @@ public class LoginServiceImpl implements LoginService {
 	@Override
 	public JiraRestClient getRestClient()
 	{
-		try
+		if( restClient == null )
 		{
-			restClient.getProjectClient().getAllProjects().claim();
-			return restClient;
-		}
-		catch( Exception e )
-		{
-			logger.error(e.getMessage());
 			throw new DataException(HttpStatus.UNAUTHORIZED.name(), "User not logged in");
 		}
+		return restClient;
 	}
 }

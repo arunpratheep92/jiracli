@@ -19,10 +19,15 @@ import org.springframework.stereotype.Service;
 import com.atlassian.jira.rest.client.api.JiraRestClient;
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.util.concurrent.Promise;
+import com.razorthink.jira.cli.domain.IncompletedIssues;
 import com.razorthink.jira.cli.domain.SprintRetrospection;
 import com.razorthink.jira.cli.exception.DataException;
 import com.razorthink.jira.cli.sprintRetrospectionReport.service.SprintRetrospectionReportService;
 import com.razorthink.jira.cli.utils.ConvertToCSV;
+import net.rcarz.jiraclient.JiraClient;
+import net.rcarz.jiraclient.JiraException;
+import net.rcarz.jiraclient.greenhopper.GreenHopperClient;
+import net.rcarz.jiraclient.greenhopper.SprintIssue;
 
 @Service
 public class SprintRetrospectionReportServiceImpl implements SprintRetrospectionReportService {
@@ -35,23 +40,41 @@ public class SprintRetrospectionReportServiceImpl implements SprintRetrospection
 	 * @see com.razorthink.jira.cli.sprintRetrospectionReport.service.impl.SprintRetrospectionReportService#getSprintRetrospectionReport(java.util.Map, com.atlassian.jira.rest.client.api.JiraRestClient)
 	 */
 	@Override
-	public String getSprintRetrospectionReport( Map<String, String> params, JiraRestClient restClient )
+	public String getSprintRetrospectionReport( Map<String, String> params, JiraRestClient restClient,
+			JiraClient jiraClient, GreenHopperClient gh )
 	{
 		logger.debug("getSprintRetrospectionReport");
 		String project = params.get("project");
 		String sprint = params.get("sprint");
+		int rvId = Integer.parseInt(params.get("rapidviewId"));
+		int sprintId = Integer.parseInt(params.get("sprintId"));
 		Double actualHours = 0.0;
 		Double estimatedHours = 0.0;
 		Integer totalTasks = 0;
+		Integer incompletedTasks = 0;
 		Double availableHours = 0.0;
 		Double surplus = 0.0;
 		String dateValue = null;
 		List<SprintRetrospection> sprintRetrospectionReport = new ArrayList<>();
+		List<String> incompleteIssueKeys = new ArrayList<>();
 		Set<String> assignee = new TreeSet<>();
 		if( project == null || sprint == null )
 		{
 			logger.error("Error: Missing required paramaters");
 			throw new DataException(HttpStatus.BAD_REQUEST.toString(), "Missing required paramaters");
+		}
+		try
+		{
+			IncompletedIssues incompletedIssues = IncompletedIssues.get(jiraClient.getRestClient(), rvId, sprintId);
+			for( SprintIssue issueValue : incompletedIssues.getIncompleteIssues() )
+			{
+				incompleteIssueKeys.add(issueValue.getKey());
+			}
+		}
+		catch( JiraException e )
+		{
+			logger.error("Error:" + e.getMessage());
+			throw new DataException(HttpStatus.INTERNAL_SERVER_ERROR.toString(), e.getMessage());
 		}
 		Iterable<Issue> retrievedIssue = restClient.getSearchClient().searchJql(" sprint = '" + sprint
 				+ "' AND project = '" + project + "' AND assignee is not EMPTY ORDER BY assignee", 1000, 0, null)
@@ -68,6 +91,7 @@ public class SprintRetrospectionReportServiceImpl implements SprintRetrospection
 				actualHours = 0.0;
 				estimatedHours = 0.0;
 				totalTasks = 0;
+				incompletedTasks = 0;
 				for( Issue assigneeIssueValue : assigneeIssue )
 				{
 					Promise<Issue> issue = restClient.getIssueClient().getIssue(assigneeIssueValue.getKey());
@@ -83,6 +107,10 @@ public class SprintRetrospectionReportServiceImpl implements SprintRetrospection
 							{
 								actualHours += issue.get().getTimeTracking().getTimeSpentMinutes();
 							}
+						}
+						if( incompleteIssueKeys.contains(issue.get().getKey()) )
+						{
+							incompletedTasks++;
 						}
 						dateValue = issue.get().getFieldByName("Sprint").getValue().toString();
 						totalTasks++;
@@ -133,6 +161,7 @@ public class SprintRetrospectionReportServiceImpl implements SprintRetrospection
 					sprintRetrospection.setEfficiency(0D);
 				}
 				sprintRetrospection.setTotalTasks(totalTasks);
+				sprintRetrospection.setIncompletedIssues(incompletedTasks);
 				sprintRetrospectionReport.add(sprintRetrospection);
 				assignee.add(issueValue.getAssignee().getDisplayName());
 			}

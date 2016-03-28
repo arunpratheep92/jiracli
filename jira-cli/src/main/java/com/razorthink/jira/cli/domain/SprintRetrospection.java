@@ -10,7 +10,8 @@ public class SprintRetrospection {
 	private Double efficiency;
 	private Double timeTaken;
 	private Integer totalTasks;
-
+	private Integer incompletedIssues;
+	
 	public String getAssignee()
 	{
 		return Assignee;
@@ -89,5 +90,15 @@ public class SprintRetrospection {
 	public void setTotalTasks( Integer totalTasks )
 	{
 		this.totalTasks = totalTasks;
+	}
+
+	public Integer getIncompletedIssues()
+	{
+		return incompletedIssues;
+	}
+
+	public void setIncompletedIssues( Integer incompletedIssues )
+	{
+		this.incompletedIssues = incompletedIssues;
 	}
 }

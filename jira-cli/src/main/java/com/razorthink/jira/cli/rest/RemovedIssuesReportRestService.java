@@ -10,32 +10,32 @@ import com.atlassian.jira.rest.client.api.JiraRestClient;
 import com.razorthink.jira.cli.advancedLogin.service.AdvancedLoginService;
 import com.razorthink.jira.cli.exception.DataException;
 import com.razorthink.jira.cli.login.service.LoginService;
-import com.razorthink.jira.cli.sprintReport.service.SprintReportService;
+import com.razorthink.jira.cli.removedIssueReport.service.RemovedIssuesReportService;
 import net.rcarz.jiraclient.JiraClient;
 import net.rcarz.jiraclient.greenhopper.GreenHopperClient;
 
 @RestController
-@RequestMapping( "/sprintReport" )
-public class SprintReportRestService {
+@RequestMapping( "/removedIssues" )
+public class RemovedIssuesReportRestService {
 
 	@Autowired
-	SprintReportService sprintReportService;
-
-	@Autowired
-	LoginService loginService;
+	RemovedIssuesReportService removedIssuesReportService;
 
 	@Autowired
 	AdvancedLoginService advancedLoginService;
 
-	@RequestMapping( value = "/getSprintReport", method = RequestMethod.POST )
-	public String getSprintReport( @RequestBody Map<String, String> params )
+	@Autowired
+	LoginService loginService;
+
+	@RequestMapping( value = "/getRemovedIssues", method = RequestMethod.POST )
+	public String getRemovedIssues( @RequestBody Map<String, String> params )
 	{
 		try
 		{
 			JiraRestClient restClient = loginService.getRestClient();
 			GreenHopperClient gh = advancedLoginService.getGreenHopperClient();
 			JiraClient jiraClient = advancedLoginService.getJiraClient();
-			return sprintReportService.getSprintReport(params, restClient, jiraClient, gh);
+			return removedIssuesReportService.getRemovedIssues(params, restClient, jiraClient, gh);
 		}
 		catch( DataException e )
 		{

@@ -86,18 +86,12 @@
 			<version>2.0.0-m31</version>
 			<scope>provided</scope>
 		</dependency>
-		<dependency>
+	<!-- 	<dependency>
 			<groupId>net.rcarz</groupId>
 			<artifactId>jira-client</artifactId>
 			<version>0.5</version>
 			<scope>compile</scope>
-			<exclusions>
-				<exclusion>
-					<artifactId>httpclient</artifactId>
-					<groupId>org.apache.httpcomponents</groupId>
-				</exclusion>
-			</exclusions>
-		</dependency>
+		</dependency> -->
 		<dependency>
 			<groupId>net.oauth.core</groupId>
 			<artifactId>oauth</artifactId>
@@ -133,7 +127,7 @@
 		<dependency>
 			<groupId>com.atlassian.jira.plugins</groupId>
 			<artifactId>jira-greenhopper-api</artifactId>
-			<version>6.7.11</version>
+			<version>7.0.10</version>
 		</dependency>
 		<dependency>
 			<groupId>com.razorthink.utils</groupId>
