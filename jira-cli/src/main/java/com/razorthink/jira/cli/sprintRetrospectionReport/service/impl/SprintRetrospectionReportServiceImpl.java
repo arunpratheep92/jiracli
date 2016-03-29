@@ -18,6 +18,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import com.atlassian.jira.rest.client.api.JiraRestClient;
 import com.atlassian.jira.rest.client.api.domain.Issue;
+import com.atlassian.jira.rest.client.api.domain.Worklog;
 import com.atlassian.util.concurrent.Promise;
 import com.razorthink.jira.cli.domain.IncompletedIssues;
 import com.razorthink.jira.cli.domain.SprintRetrospection;
@@ -54,7 +55,10 @@ public class SprintRetrospectionReportServiceImpl implements SprintRetrospection
 		Integer incompletedTasks = 0;
 		Double availableHours = 0.0;
 		Double surplus = 0.0;
-		String dateValue = null;
+		DateTime startDt = null;
+		DateTime endDt = null;
+		DateTime tempDate = null;
+		DateTime completeDate = null;
 		List<SprintRetrospection> sprintRetrospectionReport = new ArrayList<>();
 		List<String> incompleteIssueKeys = new ArrayList<>();
 		Set<String> assignee = new TreeSet<>();
@@ -66,13 +70,21 @@ public class SprintRetrospectionReportServiceImpl implements SprintRetrospection
 		Iterable<Issue> retrievedIssue = restClient.getSearchClient().searchJql(" sprint = '" + sprint
 				+ "' AND project = '" + project + "' AND assignee is not EMPTY ORDER BY assignee", 1000, 0, null)
 				.claim().getIssues();
-		Pattern pattern = Pattern.compile("\\[\".*\\[id=(.*),rapidViewId=(.*),.*,name=(.*),startDate=(.*),.*\\]");
+		Pattern pattern = Pattern.compile(
+				"\\[\".*\\[id=(.*),rapidViewId=(.*),.*,name=(.*),startDate=(.*),endDate=(.*),completeDate=(.*),.*\\]");
 		Matcher matcher = pattern
 				.matcher(retrievedIssue.iterator().next().getFieldByName("Sprint").getValue().toString());
-		if( matcher.find() )
+		while( matcher.find() )
 		{
-			sprintId = Integer.parseInt(matcher.group(1));
-			rvId = Integer.parseInt(matcher.group(2));
+			if( matcher.group(3).equals(sprint) )
+			{
+				startDt = new DateTime(matcher.group(4));
+				endDt = new DateTime(matcher.group(5));
+				completeDate = new DateTime(matcher.group(6));
+				sprintId = Integer.parseInt(matcher.group(1));
+				rvId = Integer.parseInt(matcher.group(2));
+			}
+
 		}
 		try
 		{
@@ -113,14 +125,30 @@ public class SprintRetrospectionReportServiceImpl implements SprintRetrospection
 							}
 							if( issue.get().getTimeTracking().getTimeSpentMinutes() != null )
 							{
-								actualHours += issue.get().getTimeTracking().getTimeSpentMinutes();
+								if( issue.get().getFieldByName("Sprint").getValue().toString().contains("\",\"com") )
+								{
+									Iterable<Worklog> worklogList = issue.get().getWorklogs();
+									for( Worklog worklog : worklogList )
+									{
+										if( worklog.getUpdateDate().compareTo(startDt) >= 0 && ((completeDate != null
+												&& (worklog.getUpdateDate().compareTo(completeDate) <= 0))
+												|| completeDate == null
+														&& ((worklog.getUpdateDate().compareTo(endDt) <= 0))) )
+										{
+											actualHours += worklog.getMinutesSpent();
+										}
+									}
+								}
+								else
+								{
+									actualHours += issue.get().getTimeTracking().getTimeSpentMinutes();
+								}
 							}
 						}
 						if( incompleteIssueKeys.contains(issue.get().getKey()) )
 						{
 							incompletedTasks++;
 						}
-						dateValue = issue.get().getFieldByName("Sprint").getValue().toString();
 						totalTasks++;
 					}
 					catch( InterruptedException | ExecutionException e )
@@ -130,24 +158,16 @@ public class SprintRetrospectionReportServiceImpl implements SprintRetrospection
 				}
 				if( assignee.isEmpty() )
 				{
-					pattern = Pattern.compile(
-							"\\[\".*\\[.*,state=(.*),name=(.*),startDate=(.*),endDate=(.*),completeDate=(.*),.*\\]");
-					matcher = pattern.matcher(dateValue);
-					if( matcher.find() )
+					tempDate = new DateTime(startDt.getMillis());
+					while( tempDate.compareTo(endDt) <= 0 )
 					{
-						DateTime startDt = new DateTime(matcher.group(3));
-						DateTime endDt = new DateTime(matcher.group(4));
-						DateTime tempDate = new DateTime(startDt.getMillis());
-						while( tempDate.compareTo(endDt) <= 0 )
+						if( tempDate.getDayOfWeek() != DateTimeConstants.SATURDAY
+								&& tempDate.getDayOfWeek() != DateTimeConstants.SUNDAY )
 						{
-							if( tempDate.getDayOfWeek() != DateTimeConstants.SATURDAY
-									&& tempDate.getDayOfWeek() != DateTimeConstants.SUNDAY )
-							{
-								availableHours += 1;
-							}
-							tempDate = tempDate.plusDays(1);
-
+							availableHours += 1;
 						}
+						tempDate = tempDate.plusDays(1);
+
 					}
 					availableHours *= 8D;
 				}
