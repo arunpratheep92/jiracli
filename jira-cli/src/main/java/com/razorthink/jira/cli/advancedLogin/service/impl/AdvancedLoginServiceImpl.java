@@ -11,6 +11,11 @@ import net.rcarz.jiraclient.BasicCredentials;
 import net.rcarz.jiraclient.JiraClient;
 import net.rcarz.jiraclient.greenhopper.GreenHopperClient;
 
+/**
+ * 
+ * @author arun
+ *
+ */
 @Service
 public class AdvancedLoginServiceImpl implements AdvancedLoginService {
 
@@ -18,8 +23,12 @@ public class AdvancedLoginServiceImpl implements AdvancedLoginService {
 	private static JiraClient jira;
 	private static GreenHopperClient gh;
 
-	/* (non-Javadoc)
-	 * @see com.razorthink.jira.cli.advancedLogin.service.impl.AdvancedLoginService#authorize(java.util.Map)
+	/**
+	 * AdvancedLogin Authorize is used to authorize JiraClient and GreenHopperClient
+	 * using the credentials provided.They can be used to perform operations in Jira
+	 * by means of Rest calls. 
+	 * 
+	 * @param params Contains username,password and url to authorize the user to Jira
 	 */
 	@Override
 	public void authorize( Map<String, String> params )
@@ -33,8 +42,12 @@ public class AdvancedLoginServiceImpl implements AdvancedLoginService {
 		gh = new GreenHopperClient(jira);
 	}
 
-	/* (non-Javadoc)
-	 * @see com.razorthink.jira.cli.advancedLogin.service.impl.AdvancedLoginService#getJiraClient()
+	/**
+	 * Returns a JiraClient Object which is used to fetch details from Jira.
+	 * 
+	 * @return JiraClient object
+	 * 
+	 * @throws DataException if user is not logged in
 	 */
 	@Override
 	public JiraClient getJiraClient()
@@ -46,8 +59,12 @@ public class AdvancedLoginServiceImpl implements AdvancedLoginService {
 		return jira;
 	}
 
-	/* (non-Javadoc)
-	 * @see com.razorthink.jira.cli.advancedLogin.service.impl.AdvancedLoginService#getGreenHopperClient()
+	/**
+	 * Returns a GreenHopperClient Object which is used to fetch details from Jira.
+	 * 
+	 * @return GreenHopperClient object
+	 * 
+	 * @throws DataException if user is not logged in
 	 */
 	@Override
 	public GreenHopperClient getGreenHopperClient()

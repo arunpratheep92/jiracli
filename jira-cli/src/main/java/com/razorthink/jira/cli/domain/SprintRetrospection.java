@@ -2,7 +2,7 @@ package com.razorthink.jira.cli.domain;
 
 public class SprintRetrospection {
 
-	private String Assignee;
+	private String assignee;
 	private Double estimatedHours;
 	private Double availableHours;
 	private Double surplus;
@@ -11,15 +11,15 @@ public class SprintRetrospection {
 	private Double timeTaken;
 	private Integer totalTasks;
 	private Integer incompletedIssues;
-	
+
 	public String getAssignee()
 	{
-		return Assignee;
+		return assignee;
 	}
 
 	public void setAssignee( String assignee )
 	{
-		Assignee = assignee;
+		this.assignee = assignee;
 	}
 
 	public Double getEstimatedHours()

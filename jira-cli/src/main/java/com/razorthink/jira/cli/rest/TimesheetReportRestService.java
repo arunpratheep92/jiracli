@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import com.atlassian.jira.rest.client.api.JiraRestClient;
-import com.razorthink.jira.cli.exception.DataException;
 import com.razorthink.jira.cli.login.service.LoginService;
 import com.razorthink.jira.cli.timesheet.service.TimesheetReportService;
 
@@ -28,10 +27,6 @@ public class TimesheetReportRestService {
 		{
 			JiraRestClient restClient = loginService.getRestClient();
 			return timesheetReportService.getTimesheetReport(params, restClient);
-		}
-		catch( DataException e )
-		{
-			return e.getMessage();
 		}
 		catch( Exception e )
 		{

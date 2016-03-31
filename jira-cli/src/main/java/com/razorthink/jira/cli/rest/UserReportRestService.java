@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import com.atlassian.jira.rest.client.api.JiraRestClient;
 import com.razorthink.jira.cli.domain.AggregateUserReport;
-import com.razorthink.jira.cli.exception.DataException;
 import com.razorthink.jira.cli.login.service.LoginService;
 import com.razorthink.jira.cli.userReport.service.UserReportService;
 
@@ -30,10 +29,6 @@ public class UserReportRestService {
 			JiraRestClient restClient = loginService.getRestClient();
 			AggregateUserReport report = userReporService.getUserReport(params, restClient);
 			return report.getFilepath();
-		}
-		catch( DataException e )
-		{
-			return e.getMessage();
 		}
 		catch( Exception e )
 		{

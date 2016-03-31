@@ -26,7 +26,6 @@ import com.razorthink.jira.cli.utils.ConvertToCSV;
 import com.razorthink.utils.cmutils.NullEmptyUtils;
 import net.rcarz.jiraclient.JiraClient;
 import net.rcarz.jiraclient.JiraException;
-import net.rcarz.jiraclient.greenhopper.GreenHopperClient;
 import net.rcarz.jiraclient.greenhopper.SprintIssue;
 
 @Service
@@ -40,12 +39,23 @@ public class SprintReportServiceImpl implements SprintReportService {
 
 	private static final Logger logger = LoggerFactory.getLogger(SprintReportServiceImpl.class);
 
-	/* (non-Javadoc)
-	 * @see com.razorthink.jira.cli.sprintReport.service.impl.SprintReport#getSprintReport(java.util.Map, com.atlassian.jira.rest.client.api.JiraRestClient)
+	/**
+	 * Generates a report of the sprint specified in the argument including 
+	 * issues removed from sprint and issues added during sprint
+	 * 
+	 * @param params contains
+	 * <ul>
+	 * <li><strong>project</strong> Name of the project 
+	 * <li><strong>sprint</strong> Name of the sprint for which report is to be generated
+	 * </ul>
+	 * @param restClient It is used to make Rest calls to Jira to fetch sprint details
+	 * @param jiraClient It is used to fetch removed issues and issues added during a sprint
+	 * @return Complete url of the sprint report generated
+	 * 
+	 * @throws DataException If some internal error occurs
 	 */
 	@Override
-	public String getSprintReport( Map<String, String> params, JiraRestClient restClient, JiraClient jiraClient,
-			GreenHopperClient gh )
+	public String getSprintReport( Map<String, String> params, JiraRestClient restClient, JiraClient jiraClient )
 	{
 		logger.debug("getSprintReport");
 		String sprint = params.get("sprint");
@@ -58,9 +68,9 @@ public class SprintReportServiceImpl implements SprintReportService {
 		int rvId = 0;
 		int sprintId = 0;
 		String assignee = null;
-		AggregateUserReport aggregateUserReport = new AggregateUserReport();
+		AggregateUserReport aggregateUserReport = null;
 		List<UserReport> issueList = new ArrayList<>();
-		HashMap<String, AggregateUserReport> sprintReport = new HashMap<>();
+		Map<String, AggregateUserReport> sprintReport = new HashMap<>();
 		Iterable<Issue> retrievedIssue = restClient.getSearchClient()
 				.searchJql(" sprint = '" + sprint + "' AND project = '" + project + "'").claim().getIssues();
 		Pattern pattern = Pattern.compile("\\[\".*\\[id=(.*),rapidViewId=(.*),.*,name=(.*),startDate=(.*),.*\\]");

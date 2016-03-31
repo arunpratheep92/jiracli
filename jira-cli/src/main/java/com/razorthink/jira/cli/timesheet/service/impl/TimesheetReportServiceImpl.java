@@ -29,8 +29,18 @@ public class TimesheetReportServiceImpl implements TimesheetReportService {
 
 	private static final Logger logger = LoggerFactory.getLogger(TimesheetReportServiceImpl.class);
 
-	/* (non-Javadoc)
-	 * @see com.razorthink.jira.cli.timesheet.service.impl.TimesheetReportService#getTimesheetReport(java.util.Map, com.atlassian.jira.rest.client.api.JiraRestClient)
+	/**
+	 * Generates a timesheet report of the sprint specified in the argument
+	 * 
+	 * @param params contains
+	 * <ul>
+	 * <li><strong>project</strong> Name of the project 
+	 * <li><strong>sprint</strong> Name of the sprint for which report is to be generated
+	 * </ul>
+	 * @param restClient It is used to make Rest calls to Jira to fetch sprint details
+	 * @return Complete url of the timesheet report generated
+	 * 
+	 * @throws DataException If some internal error occurs
 	 */
 	@Override
 	public String getTimesheetReport( Map<String, String> params, JiraRestClient restClient )
@@ -58,10 +68,10 @@ public class TimesheetReportServiceImpl implements TimesheetReportService {
 						timesheetReport.setKey(issue.get().getKey());
 						timesheetReport.setType(issue.get().getIssueType().getName());
 						timesheetReport.setTitle(issue.get().getSummary());
-						timesheetReport.setUsername(issue.get().getAssignee().getDisplayName());
+						timesheetReport.setUsername(worklog.getUpdateAuthor().getDisplayName());
 						timesheetReport.setSprint(sprint);
 						timesheetReport.setDate(worklog.getUpdateDate().toString("MM/dd/yy HH:mm:ss"));
-						timesheetReport.setTimeSpent(worklog.getMinutesSpent());
+						timesheetReport.setTimeSpent(worklog.getMinutesSpent() * 1D);
 						timesheetReport.setComment(worklog.getComment());
 						report.add(timesheetReport);
 					}

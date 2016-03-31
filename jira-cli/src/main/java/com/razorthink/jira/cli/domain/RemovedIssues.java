@@ -23,7 +23,9 @@ public class RemovedIssues {
 	{
 		this.restclient = restclient;
 		if( json != null )
+		{
 			deserialise(json);
+		}
 	}
 
 	@SuppressWarnings( { "rawtypes", "unchecked" } )

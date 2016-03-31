@@ -8,11 +8,9 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import com.atlassian.jira.rest.client.api.JiraRestClient;
 import com.razorthink.jira.cli.advancedLogin.service.AdvancedLoginService;
-import com.razorthink.jira.cli.exception.DataException;
 import com.razorthink.jira.cli.login.service.LoginService;
 import com.razorthink.jira.cli.sprintRetrospectionReport.service.SprintRetrospectionReportService;
 import net.rcarz.jiraclient.JiraClient;
-import net.rcarz.jiraclient.greenhopper.GreenHopperClient;
 
 @RestController
 @RequestMapping( "/sprintRetrospectionReport" )
@@ -33,13 +31,8 @@ public class SprintRetrospectionRestService {
 		try
 		{
 			JiraRestClient restClient = loginService.getRestClient();
-			GreenHopperClient gh = advancedLoginService.getGreenHopperClient();
 			JiraClient jiraClient = advancedLoginService.getJiraClient();
-			return sprintRetrospectionReportService.getSprintRetrospectionReport(params, restClient, jiraClient, gh);
-		}
-		catch( DataException e )
-		{
-			return e.getMessage();
+			return sprintRetrospectionReportService.getSprintRetrospectionReport(params, restClient, jiraClient);
 		}
 		catch( Exception e )
 		{

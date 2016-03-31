@@ -7,6 +7,14 @@ import net.rcarz.jiraclient.greenhopper.GreenHopperClient;
 
 public interface RemovedIssuesReportService {
 
+	/**
+	 * 
+	 * @param params
+	 * @param restClient
+	 * @param jiraClient
+	 * @param gh
+	 * @return
+	 */
 	String getRemovedIssues( Map<String, String> params, JiraRestClient restClient, JiraClient jiraClient,
 			GreenHopperClient gh );
 

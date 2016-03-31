@@ -27,9 +27,13 @@ import com.razorthink.jira.cli.sprintRetrospectionReport.service.SprintRetrospec
 import com.razorthink.jira.cli.utils.ConvertToCSV;
 import net.rcarz.jiraclient.JiraClient;
 import net.rcarz.jiraclient.JiraException;
-import net.rcarz.jiraclient.greenhopper.GreenHopperClient;
 import net.rcarz.jiraclient.greenhopper.SprintIssue;
 
+/**
+ * 
+ * @author arun
+ *
+ */
 @Service
 public class SprintRetrospectionReportServiceImpl implements SprintRetrospectionReportService {
 
@@ -37,12 +41,26 @@ public class SprintRetrospectionReportServiceImpl implements SprintRetrospection
 	private Environment env;
 	private static final Logger logger = LoggerFactory.getLogger(SprintRetrospectionReportServiceImpl.class);
 
-	/* (non-Javadoc)
-	 * @see com.razorthink.jira.cli.sprintRetrospectionReport.service.impl.SprintRetrospectionReportService#getSprintRetrospectionReport(java.util.Map, com.atlassian.jira.rest.client.api.JiraRestClient)
+	/**
+	 * Generates a Sprint Retrospection report of the sprint specified in the argument
+	 * 
+	 * @param params contains
+	 * <ul>
+	 * <li><strong>project</strong> Name of the project 
+	 * <li><strong>sprint</strong> Name of the sprint for which report is to be generated
+	 * <li><strong>assignee name</strong> OPTIONAL Available hours of the assignee
+	 * <li><strong>avilableHours</strong> OPTIONAL Default Available hours for all assignees
+	 * </ul>
+	 * 
+	 * @param restClient It is used to make Rest calls to Jira to fetch sprint details
+	 * @param jiraClient It is used to fetch removed issues and issues added during a sprint
+	 * @return Complete url of the sprint Retrospection report generated
+	 * 
+	 * @throws DataException If some internal error occurs
 	 */
 	@Override
 	public String getSprintRetrospectionReport( Map<String, String> params, JiraRestClient restClient,
-			JiraClient jiraClient, GreenHopperClient gh )
+			JiraClient jiraClient )
 	{
 		logger.debug("getSprintRetrospectionReport");
 		String project = params.get("project");
@@ -59,6 +77,7 @@ public class SprintRetrospectionReportServiceImpl implements SprintRetrospection
 		DateTime endDt = null;
 		DateTime tempDate = null;
 		DateTime completeDate = null;
+		String jql = null;
 		List<SprintRetrospection> sprintRetrospectionReport = new ArrayList<>();
 		List<String> incompleteIssueKeys = new ArrayList<>();
 		Set<String> assignee = new TreeSet<>();
@@ -80,11 +99,13 @@ public class SprintRetrospectionReportServiceImpl implements SprintRetrospection
 			{
 				startDt = new DateTime(matcher.group(4));
 				endDt = new DateTime(matcher.group(5));
-				completeDate = new DateTime(matcher.group(6));
+				if( !matcher.group(6).equals("<null>") )
+				{
+					completeDate = new DateTime(matcher.group(6));
+				}
 				sprintId = Integer.parseInt(matcher.group(1));
 				rvId = Integer.parseInt(matcher.group(2));
 			}
-
 		}
 		try
 		{
@@ -103,10 +124,20 @@ public class SprintRetrospectionReportServiceImpl implements SprintRetrospection
 		{
 			if( !assignee.contains(issueValue.getAssignee().getDisplayName()) )
 			{
-				Iterable<Issue> assigneeIssue = restClient
-						.getSearchClient().searchJql("assignee = '" + issueValue.getAssignee().getName()
-								+ "' AND sprint = '" + sprint + "' AND project = '" + project + "'")
-						.claim().getIssues();
+				if( completeDate != null )
+				{
+					jql = " issue in workedIssues(\"" + startDt.toString("yyyy/MM/dd") + "\",\""
+							+ completeDate.toString("yyyy/MM/dd") + "\", " + issueValue.getAssignee().getName()
+							+ ") AND assignee is not EMPTY ORDER BY assignee ASC";
+				}
+				else
+				{
+					jql = " issue in workedIssues(\"" + startDt.toString("yyyy/MM/dd") + "\",\""
+							+ endDt.toString("yyyy/MM/dd") + "\"," + issueValue.getAssignee().getName()
+							+ ") AND assignee is not EMPTY ORDER BY assignee ASC";
+				}
+				Iterable<Issue> assigneeIssue = restClient.getSearchClient().searchJql(jql, 1000, 0, null).claim()
+						.getIssues();
 				SprintRetrospection sprintRetrospection = new SprintRetrospection();
 				actualHours = 0.0;
 				estimatedHours = 0.0;
@@ -121,27 +152,26 @@ public class SprintRetrospectionReportServiceImpl implements SprintRetrospection
 						{
 							if( issue.get().getTimeTracking().getOriginalEstimateMinutes() != null )
 							{
-								estimatedHours += issue.get().getTimeTracking().getOriginalEstimateMinutes();
+								if( issueValue.getAssignee().getName()
+										.equals(assigneeIssueValue.getAssignee().getName()) )
+								{
+									estimatedHours += issue.get().getTimeTracking().getOriginalEstimateMinutes();
+								}
 							}
 							if( issue.get().getTimeTracking().getTimeSpentMinutes() != null )
 							{
-								if( issue.get().getFieldByName("Sprint").getValue().toString().contains("\",\"com") )
+								Iterable<Worklog> worklogList = issue.get().getWorklogs();
+								for( Worklog worklog : worklogList )
 								{
-									Iterable<Worklog> worklogList = issue.get().getWorklogs();
-									for( Worklog worklog : worklogList )
+									if( (worklog.getUpdateDate().compareTo(startDt) >= 0 && ((completeDate != null
+											&& (worklog.getUpdateDate().compareTo(completeDate) <= 0))
+											|| completeDate == null
+													&& ((worklog.getUpdateDate().compareTo(endDt) <= 0))))
+											&& worklog.getUpdateAuthor().getName()
+													.equals(issueValue.getAssignee().getName()) )
 									{
-										if( worklog.getUpdateDate().compareTo(startDt) >= 0 && ((completeDate != null
-												&& (worklog.getUpdateDate().compareTo(completeDate) <= 0))
-												|| completeDate == null
-														&& ((worklog.getUpdateDate().compareTo(endDt) <= 0))) )
-										{
-											actualHours += worklog.getMinutesSpent();
-										}
+										actualHours += worklog.getMinutesSpent();
 									}
-								}
-								else
-								{
-									actualHours += issue.get().getTimeTracking().getTimeSpentMinutes();
 								}
 							}
 						}
@@ -153,7 +183,8 @@ public class SprintRetrospectionReportServiceImpl implements SprintRetrospection
 					}
 					catch( InterruptedException | ExecutionException e )
 					{
-
+						logger.error("Error:" + e.getMessage());
+						throw new DataException(HttpStatus.INTERNAL_SERVER_ERROR.toString(), e.getMessage());
 					}
 				}
 				if( assignee.isEmpty() )
@@ -173,6 +204,14 @@ public class SprintRetrospectionReportServiceImpl implements SprintRetrospection
 				}
 				estimatedHours /= 60D;
 				actualHours /= 60D;
+				if( params.get("availableHours") != null )
+				{
+					availableHours = Double.parseDouble(params.get("availableHours"));
+				}
+				if( params.get(issueValue.getAssignee().getName()) != null )
+				{
+					availableHours = Double.parseDouble(params.get(issueValue.getAssignee().getName()));
+				}
 				surplus = availableHours - estimatedHours;
 				sprintRetrospection.setAssignee(issueValue.getAssignee().getDisplayName());
 				sprintRetrospection.setEstimatedHours(estimatedHours);

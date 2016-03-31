@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import com.atlassian.jira.rest.client.api.JiraRestClient;
 import com.razorthink.jira.cli.backlog.service.BacklogReportService;
-import com.razorthink.jira.cli.exception.DataException;
 import com.razorthink.jira.cli.login.service.LoginService;
 
 @RestController
@@ -28,10 +27,6 @@ public class BacklogReportRestService {
 		{
 			JiraRestClient restClient = loginService.getRestClient();
 			return backlogReportService.getBacklogReport(params, restClient);
-		}
-		catch( DataException e )
-		{
-			return e.getMessage();
 		}
 		catch( Exception e )
 		{

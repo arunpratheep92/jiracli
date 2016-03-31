@@ -12,12 +12,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import com.atlassian.jira.rest.client.api.JiraRestClient;
 import com.atlassian.jira.rest.client.api.domain.Issue;
 import com.atlassian.util.concurrent.Promise;
 import com.razorthink.jira.cli.domain.AggregateUserReport;
 import com.razorthink.jira.cli.domain.UserReport;
+import com.razorthink.jira.cli.exception.DataException;
 import com.razorthink.jira.cli.userReport.service.UserReportService;
 import com.razorthink.jira.cli.utils.ConvertToCSV;
 import com.razorthink.utils.cmutils.NullEmptyUtils;
@@ -35,8 +37,20 @@ public class UserReportServiceImpl implements UserReportService {
 
 	private static final Logger logger = LoggerFactory.getLogger(UserReportServiceImpl.class);
 
-	/* (non-Javadoc)
-	 * @see com.razorthink.jira.cli.userReport.service.impl.UserReportService#getUserReport(java.util.Map, com.atlassian.jira.rest.client.api.JiraRestClient)
+	/**
+	 * Generates a report of the issues that a particular user worked on a particular sprint
+	 * 
+	 * @param params contains
+	 * <ul>
+	 * <li><strong>project</strong> Name of the project 
+	 * <li><strong>sprint</strong> Name of the sprint
+	 * <li><strong>user</strong> Name of the user for which report is to be generated
+	 * <li><strong>export</strong> If true exports the report to csv
+	 * </ul>
+	 * @param restClient It is used to make Rest calls to Jira to fetch sprint details
+	 * @return Complete url of the user report generated
+	 * 
+	 * @throws DataException If some internal error occurs
 	 */
 	@Override
 	public AggregateUserReport getUserReport( Map<String, String> params, JiraRestClient restClient )
@@ -165,6 +179,7 @@ public class UserReportServiceImpl implements UserReportService {
 			catch( InterruptedException | ExecutionException e )
 			{
 				logger.error("Error:" + e.getMessage());
+				throw new DataException(HttpStatus.INTERNAL_SERVER_ERROR.toString(), e.getMessage());
 			}
 		}
 		if( export.equals("true") )

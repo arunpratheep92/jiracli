@@ -7,25 +7,26 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import com.atlassian.jira.rest.client.api.JiraRestClient;
-import com.razorthink.jira.cli.completeJiraReport.service.CompleteJiraReportService;
 import com.razorthink.jira.cli.login.service.LoginService;
+import com.razorthink.jira.cli.worklogReport.service.WorklogReportService;
 
 @RestController
-@RequestMapping( "/jiraReport" )
-public class CompleteJiraReportRestService {
+@RequestMapping( "/worklogReport" )
+public class WorklogReportRestService {
 
 	@Autowired
-	CompleteJiraReportService completeJiraReportService;
+	WorklogReportService worklogReportService;
+
 	@Autowired
 	LoginService loginService;
 
-	@RequestMapping( value = "/getCompleteReport", method = RequestMethod.POST )
-	public String getBacklogReport( @RequestBody Map<String, String> params )
+	@RequestMapping( value = "/getWorklogReport", method = RequestMethod.POST )
+	public String getTimesheetReport( @RequestBody Map<String, String> params )
 	{
 		try
 		{
 			JiraRestClient restClient = loginService.getRestClient();
-			return completeJiraReportService.getCompleteJiraReport(params, restClient);
+			return worklogReportService.getWorklogReport(params, restClient);
 		}
 		catch( Exception e )
 		{

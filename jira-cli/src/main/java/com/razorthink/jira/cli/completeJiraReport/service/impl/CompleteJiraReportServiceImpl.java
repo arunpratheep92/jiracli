@@ -21,6 +21,11 @@ import com.razorthink.jira.cli.exception.DataException;
 import com.razorthink.jira.cli.utils.ConvertToCSV;
 import com.razorthink.utils.cmutils.NullEmptyUtils;
 
+/**
+ * 
+ * @author arun
+ *
+ */
 @Service
 public class CompleteJiraReportServiceImpl implements CompleteJiraReportService {
 
@@ -28,9 +33,26 @@ public class CompleteJiraReportServiceImpl implements CompleteJiraReportService 
 	private Environment env;
 	private static final Logger logger = LoggerFactory.getLogger(CompleteJiraReportServiceImpl.class);
 
-	/* (non-Javadoc)
-	 * @see com.razorthink.jira.cli.completeJiraReport.service.impl.CompleteJiraReportService#getCompleteJiraReport(java.lang.String, com.atlassian.jira.rest.client.api.JiraRestClient)
+	/**
+	 * Performs a JQL search and returns issues matching the query. 
+	 * The first startAt issues will be skipped and SearchResult will contain at most maxResults issues. 
+	 * 
+	 * @param params contains 
+	 * <ul>
+	 * <li><strong>jql</strong> Jira Query Language which is used to filter the issues
+	 * <li><strong>maxResults</strong> Maximum results to be fetched from Jira(0-1000)
+	 *  When null is given, the default maxResults configured in JIRA is used (usually 50).
+	 * <li><strong>startAt</strong> starting index (0-based) defining how many issues should be skipped in the
+	 *  results. For example for startAt=5 and maxResults=3 the results will include matching
+	 *  issues with index 5, 6 and 7. For startAt = 0 and maxResults=3 the issues returned are
+	 *  from position 0, 1 and 2. When null is given, the default startAt is used (0).
+	 * </ul>
+	 * @param restClient It is used to make Rest calls to Jira to fetch complete details
+	 * @return Complete url of the report generated
+	 * 
+	 * @throws DataException If some internal error occurs
 	 */
+
 	@Override
 	public String getCompleteJiraReport( Map<String, String> params, JiraRestClient restClient )
 	{

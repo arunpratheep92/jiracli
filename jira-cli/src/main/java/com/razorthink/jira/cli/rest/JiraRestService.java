@@ -58,276 +58,140 @@ public class JiraRestService {
 		ListIterator<String> iterator = commandToken.listIterator();
 		while( iterator.hasNext() )
 		{
-			switch ( iterator.next() )
+			try
 			{
-				case "jira" :
-					break;
-				case "-u" :{
-					String username = iterator.next();
-					iterator.next();
-					String password = iterator.next();
-					iterator.next();
-					String url = iterator.next();
-					try
-					{
+				switch ( iterator.next() )
+				{
+					case "jira" :
+						break;
+					case "-u" :{
+						String username = iterator.next();
+						iterator.next();
+						String password = iterator.next();
+						iterator.next();
+						String url = iterator.next();
 						if( jiraService.login(username, password, url) && !iterator.hasNext() )
 						{
 							return "login success";
 						}
+						break;
 					}
-					catch( Exception e )
-					{
-						return e.getMessage();
-					}
-					break;
-				}
-				case "-getProjects" :{
-					try
-					{
+					case "-getProjects" :
 						return jiraService.getAllProjects().toString();
-					}
-					catch( Exception e )
-					{
-						return e.getMessage();
-					}
-				}
-				case "-getIssues" :{
-					try
-					{
+					case "-getIssues" :
 						List<JiraIssue> jqlResult = jiraService.getAllIssues(commandToken);
 						return JSONUtils.toJson(jqlResult);
-					}
-					catch( Exception e )
-					{
-						return e.getMessage();
-					}
-				}
-				case "-getStatus" :
-					iterator.next();
-					String issue = iterator.next();
-					iterator.next();
-					String project = iterator.next();
-					try
-					{
+					case "-getStatus" :
+						iterator.next();
+						String issue = iterator.next();
+						iterator.next();
+						String project = iterator.next();
 						return jiraService.getStatus(issue, project);
-					}
-					catch( Exception e )
-					{
-						return e.getMessage();
-					}
-				case "-getIssueType" :
-					iterator.next();
-					issue = iterator.next();
-					iterator.next();
-					project = iterator.next();
-					try
-					{
+					case "-getIssueType" :
+						iterator.next();
+						issue = iterator.next();
+						iterator.next();
+						project = iterator.next();
 						return jiraService.getIssueType(issue, project);
-					}
-					catch( Exception e )
-					{
-						return e.getMessage();
-					}
-				case "-getComponents" :
-					iterator.next();
-					issue = iterator.next();
-					iterator.next();
-					project = iterator.next();
-					try
-					{
+					case "-getComponents" :
+						iterator.next();
+						issue = iterator.next();
+						iterator.next();
+						project = iterator.next();
 						return jiraService.getComponents(issue, project);
-					}
-					catch( Exception e )
-					{
-						return e.getMessage();
-					}
-				case "-getDescription" :
-					iterator.next();
-					issue = iterator.next();
-					iterator.next();
-					project = iterator.next();
-					try
-					{
+					case "-getDescription" :
+						iterator.next();
+						issue = iterator.next();
+						iterator.next();
+						project = iterator.next();
 						return jiraService.getDesription(issue, project);
-					}
-					catch( Exception e )
-					{
-						return e.getMessage();
-					}
-				case "-getReporter" :
-					iterator.next();
-					issue = iterator.next();
-					iterator.next();
-					project = iterator.next();
-					try
-					{
+					case "-getReporter" :
+						iterator.next();
+						issue = iterator.next();
+						iterator.next();
+						project = iterator.next();
 						return jiraService.getReporter(issue, project);
-					}
-					catch( Exception e )
-					{
-						return e.getMessage();
-					}
-				case "-getAssignee" :
-					iterator.next();
-					issue = iterator.next();
-					iterator.next();
-					project = iterator.next();
-					try
-					{
+					case "-getAssignee" :
+						iterator.next();
+						issue = iterator.next();
+						iterator.next();
+						project = iterator.next();
 						return jiraService.getAssignee(issue, project);
-					}
-					catch( Exception e )
-					{
-						return e.getMessage();
-					}
-				case "-getResolution" :
-					iterator.next();
-					issue = iterator.next();
-					iterator.next();
-					project = iterator.next();
-					try
-					{
+					case "-getResolution" :
+						iterator.next();
+						issue = iterator.next();
+						iterator.next();
+						project = iterator.next();
 						return jiraService.getResolution(issue, project);
-					}
-					catch( Exception e )
-					{
-						return e.getMessage();
-					}
-				case "-getCreationDate" :
-					iterator.next();
-					issue = iterator.next();
-					iterator.next();
-					project = iterator.next();
-					try
-					{
+					case "-getCreationDate" :
+						iterator.next();
+						issue = iterator.next();
+						iterator.next();
+						project = iterator.next();
 						return jiraService.getCreationDate(issue, project);
-					}
-					catch( Exception e )
-					{
-						return e.getMessage();
-					}
-				case "-getUpdateDate" :
-					iterator.next();
-					issue = iterator.next();
-					iterator.next();
-					project = iterator.next();
-					try
-					{
+					case "-getUpdateDate" :
+						iterator.next();
+						issue = iterator.next();
+						iterator.next();
+						project = iterator.next();
 						return jiraService.getUpdateDate(issue, project);
-					}
-					catch( Exception e )
-					{
-						return e.getMessage();
-					}
-				case "-getDueDate" :
-					iterator.next();
-					issue = iterator.next();
-					iterator.next();
-					project = iterator.next();
-					try
-					{
+					case "-getDueDate" :
+						iterator.next();
+						issue = iterator.next();
+						iterator.next();
+						project = iterator.next();
 						return jiraService.getDueDate(issue, project);
-					}
-					catch( Exception e )
-					{
-						return e.getMessage();
-					}
-				case "-getPriority" :
-					iterator.next();
-					issue = iterator.next();
-					iterator.next();
-					project = iterator.next();
-					try
-					{
+					case "-getPriority" :
+						iterator.next();
+						issue = iterator.next();
+						iterator.next();
+						project = iterator.next();
 						return jiraService.getPriority(issue, project);
-					}
-					catch( Exception e )
-					{
-						return e.getMessage();
-					}
-				case "-getVotes" :
-					iterator.next();
-					issue = iterator.next();
-					iterator.next();
-					project = iterator.next();
-					try
-					{
+					case "-getVotes" :
+						iterator.next();
+						issue = iterator.next();
+						iterator.next();
+						project = iterator.next();
 						return jiraService.getVotes(issue, project);
-					}
-					catch( Exception e )
-					{
-						return e.getMessage();
-					}
-				case "-getFixVersions" :
-					iterator.next();
-					issue = iterator.next();
-					iterator.next();
-					project = iterator.next();
-					try
-					{
+					case "-getFixVersions" :
+						iterator.next();
+						issue = iterator.next();
+						iterator.next();
+						project = iterator.next();
 						return jiraService.getFixVersions(issue, project);
-					}
-					catch( Exception e )
-					{
-						return e.getMessage();
-					}
-				case "-getComments" :
-					iterator.next();
-					issue = iterator.next();
-					iterator.next();
-					project = iterator.next();
-					try
-					{
+					case "-getComments" :
+						iterator.next();
+						issue = iterator.next();
+						iterator.next();
+						project = iterator.next();
 						return jiraService.getComments(issue, project);
-					}
-					catch( Exception e )
-					{
-						return e.getMessage();
-					}
-				case "-getWatchers" :
-					iterator.next();
-					issue = iterator.next();
-					iterator.next();
-					project = iterator.next();
-					try
-					{
+					case "-getWatchers" :
+						iterator.next();
+						issue = iterator.next();
+						iterator.next();
+						project = iterator.next();
 						return jiraService.getWatchers(issue, project);
-					}
-					catch( Exception e )
-					{
-						return e.getMessage();
-					}
-				case "-getLabel" :
-					iterator.next();
-					issue = iterator.next();
-					iterator.next();
-					project = iterator.next();
-					try
-					{
+					case "-getLabel" :
+						iterator.next();
+						issue = iterator.next();
+						iterator.next();
+						project = iterator.next();
 						return jiraService.getLabels(issue, project);
-					}
-					catch( Exception e )
-					{
-						return e.getMessage();
-					}
-
-				case "-jql" :
-					StringBuilder jqlValue = new StringBuilder("");
-					while( iterator.hasNext() )
-					{
-						jqlValue.append(iterator.next()).append(" ");
-					}
-					try
-					{
-						List<JiraIssue> jqlResult = jiraService.getJqlResult(jqlValue.toString());
-						return JSONUtils.toJson(jqlResult);
-					}
-					catch( Exception e )
-					{
-						return e.getMessage();
-					}
-				case "--help" :
-					return jiraService.getHelp();
+					case "-jql" :
+						StringBuilder jqlValue = new StringBuilder("");
+						while( iterator.hasNext() )
+						{
+							jqlValue.append(iterator.next()).append(" ");
+						}
+						List<JiraIssue> jqlResult1 = jiraService.getJqlResult(jqlValue.toString());
+						return JSONUtils.toJson(jqlResult1);
+					case "--help" :
+						return jiraService.getHelp();
+				}
+			}
+			catch( Exception e )
+			{
+				return e.getMessage();
 			}
 		}
 		return null;

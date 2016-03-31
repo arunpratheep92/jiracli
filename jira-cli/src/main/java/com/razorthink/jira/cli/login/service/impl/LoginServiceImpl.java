@@ -21,8 +21,12 @@ public class LoginServiceImpl implements LoginService {
 	private static final Logger logger = LoggerFactory.getLogger(LoginServiceImpl.class);
 	private static JiraRestClient restClient;
 
-	/* (non-Javadoc)
-	 * @see com.razorthink.jira.cli.login.service.impl.LoginService#authorize(java.util.Map)
+	/**
+	 * Authorize is used to authorize JiraRestClient using the credentials provided.
+	 * It can be used to perform operations in Jira by means of Rest calls. 
+	 * 
+	 * @param params Contains username,password and url to authorize the user to Jira
+	 * @return JiraRestClient object
 	 */
 	@Override
 	public JiraRestClient authorize( Map<String, String> params )
@@ -50,8 +54,12 @@ public class LoginServiceImpl implements LoginService {
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see com.razorthink.jira.cli.login.service.impl.LoginService#getRestClient()
+	/**
+	 * Returns a JiraRestClient Object which is used to fetch details from Jira.
+	 * 
+	 * @return JiraRestClient object
+	 * 
+	 * @throws DataException if user is not logged in
 	 */
 	@Override
 	public JiraRestClient getRestClient()

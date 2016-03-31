@@ -9,7 +9,7 @@ public class TimesheetReport {
 	private String title;
 	private String date;
 	private String username;
-	private Integer timeSpent;
+	private Double timeSpent;
 	private String comment;
 
 	public String getProject()
@@ -82,12 +82,12 @@ public class TimesheetReport {
 		this.username = username;
 	}
 
-	public Integer getTimeSpent()
+	public Double getTimeSpent()
 	{
 		return timeSpent;
 	}
 
-	public void setTimeSpent( Integer timeSpent )
+	public void setTimeSpent( Double timeSpent )
 	{
 		this.timeSpent = timeSpent;
 	}

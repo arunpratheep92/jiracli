@@ -21,7 +21,9 @@ public class IncompletedIssues {
 	{
 		this.restclient = restclient;
 		if( json != null )
+		{
 			deserialise(json);
+		}
 	}
 
 	@SuppressWarnings( "rawtypes" )

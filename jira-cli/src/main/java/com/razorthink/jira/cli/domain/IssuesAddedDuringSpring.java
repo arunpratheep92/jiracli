@@ -12,12 +12,10 @@ import net.sf.json.JSONObject;
 public class IssuesAddedDuringSpring {
 
 	static final String RESOURCE_URI = "/rest/greenhopper/1.0/";
-	private RestClient restclient = null;
-	private Set addedIssues = null;
+	private Set<?> addedIssues = null;
 
 	protected IssuesAddedDuringSpring( RestClient restclient, JSONObject json )
 	{
-		this.restclient = restclient;
 		if( json != null )
 			deserialise(json);
 	}
@@ -65,7 +63,7 @@ public class IssuesAddedDuringSpring {
 		return new IssuesAddedDuringSpring(restclient, (JSONObject) jo.get("contents"));
 	}
 
-	public Set getAddedIssues()
+	public Set<?> getAddedIssues()
 	{
 		return addedIssues;
 	}

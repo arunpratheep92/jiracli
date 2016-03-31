@@ -21,6 +21,11 @@ import com.razorthink.jira.cli.exception.DataException;
 import com.razorthink.jira.cli.utils.ConvertToCSV;
 import com.razorthink.utils.cmutils.NullEmptyUtils;
 
+/**
+ * 
+ * @author arun
+ *
+ */
 @Service
 public class BacklogReportServiceImpl implements BacklogReportService {
 
@@ -28,8 +33,12 @@ public class BacklogReportServiceImpl implements BacklogReportService {
 	private Environment env;
 	private static final Logger logger = LoggerFactory.getLogger(BacklogReportServiceImpl.class);
 
-	/* (non-Javadoc)
-	 * @see com.razorthink.jira.cli.backlog.service.impl.BacklogReportService#getBacklogReport(java.util.Map, com.atlassian.jira.rest.client.api.JiraRestClient)
+	/**
+	 * Generates a backlog report of the project mentioned 
+	 * 
+	 * @param params Contains the name of the project whose backlog report is to be generated
+	 * @param restClient It is used to make Rest calls to Jira to fetch backlog details
+	 * @return Complete url of the backlog report generated
 	 */
 	@Override
 	public String getBacklogReport( Map<String, String> params, JiraRestClient restClient )
@@ -37,15 +46,20 @@ public class BacklogReportServiceImpl implements BacklogReportService {
 		logger.debug("getBacklogReport");
 		String project = params.get("project");
 		List<UserReport> issueList = new ArrayList<>();
-		Iterable<Issue> retrievedIssue = restClient.getSearchClient().searchJql(
-				"project = '" + project + "' AND sprint is EMPTY AND resolution = Unresolved and status != Closed")
+		Iterable<Issue> retrievedIssue = restClient.getSearchClient()
+				.searchJql(
+						"project = '" + project
+								+ "' AND sprint is EMPTY AND resolution = Unresolved and status != Closed",
+						1000, 0, null)
 				.claim().getIssues();
 		for( Issue issueValue : retrievedIssue )
 		{
+			//Retrieve issues for a particular key that contains TimeTracking details
 			Promise<Issue> issue = restClient.getIssueClient().getIssue(issueValue.getKey());
 			UserReport userReport = new UserReport();
 			try
 			{
+				StringBuilder sprint = new StringBuilder("");
 				userReport.setKey(issue.get().getKey());
 				userReport.setStatus(issue.get().getStatus().getName());
 				userReport.setIssueType(issue.get().getIssueType().getName());
@@ -124,10 +138,11 @@ public class BacklogReportServiceImpl implements BacklogReportService {
 					{
 						Pattern pattern = Pattern.compile("\\[\".*\\[.*,name=(.*),startDate=(.*),.*\\]");
 						Matcher matcher = pattern.matcher(issue.get().getFieldByName("Sprint").getValue().toString());
-						if( matcher.find() )
+						while( matcher.find() )
 						{
-							userReport.setSprint(matcher.group(1));
+							sprint.append(matcher.group(1)).append(" ");
 						}
+						userReport.setSprint(sprint.toString());
 					}
 					else
 					{
@@ -146,6 +161,6 @@ public class BacklogReportServiceImpl implements BacklogReportService {
 		filename = filename.replace(" ", "_");
 		ConvertToCSV exportToCSV = new ConvertToCSV();
 		exportToCSV.exportToCSV(env.getProperty("csv.filename") + filename, issueList);
-		return env.getProperty("csv.aliaspath") + filename;
+		return env.getProperty("csv.aliaspath") + filename + " ";
 	}
 }
