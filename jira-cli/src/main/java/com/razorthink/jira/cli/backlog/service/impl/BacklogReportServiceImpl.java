@@ -45,6 +45,11 @@ public class BacklogReportServiceImpl implements BacklogReportService {
 	{
 		logger.debug("getBacklogReport");
 		String project = params.get("project");
+		if( project == null )
+		{
+			logger.error("Error: Missing required paramaters");
+			throw new DataException(HttpStatus.BAD_REQUEST.toString(), "Missing required paramaters");
+		}
 		List<UserReport> issueList = new ArrayList<>();
 		Iterable<Issue> retrievedIssue = restClient.getSearchClient()
 				.searchJql(

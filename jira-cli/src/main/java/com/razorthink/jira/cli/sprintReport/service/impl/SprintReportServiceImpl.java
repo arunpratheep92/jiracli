@@ -72,7 +72,8 @@ public class SprintReportServiceImpl implements SprintReportService {
 		List<UserReport> issueList = new ArrayList<>();
 		Map<String, AggregateUserReport> sprintReport = new HashMap<>();
 		Iterable<Issue> retrievedIssue = restClient.getSearchClient()
-				.searchJql(" sprint = '" + sprint + "' AND project = '" + project + "'").claim().getIssues();
+				.searchJql(" sprint = '" + sprint + "' AND project = '" + project + "'", 1000, 0, null).claim()
+				.getIssues();
 		Pattern pattern = Pattern.compile("\\[\".*\\[id=(.*),rapidViewId=(.*),.*,name=(.*),startDate=(.*),.*\\]");
 		Matcher matcher = pattern
 				.matcher(retrievedIssue.iterator().next().getFieldByName("Sprint").getValue().toString());
