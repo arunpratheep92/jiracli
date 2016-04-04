@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import com.razorthink.jira.cli.advancedLogin.service.AdvancedLoginService;
-import com.razorthink.jira.cli.exception.DataException;
 import com.razorthink.jira.cli.login.service.LoginService;
 
 @RestController
@@ -29,13 +28,9 @@ public class LoginRestService {
 			advancedLoginService.authorize(params);
 			return "Login Success";
 		}
-		catch( DataException e )
-		{
-			return "Invalid Credentials";
-		}
 		catch( Exception e )
 		{
-			return e.getMessage();
+			return "Login Failed";
 		}
 	}
 }
