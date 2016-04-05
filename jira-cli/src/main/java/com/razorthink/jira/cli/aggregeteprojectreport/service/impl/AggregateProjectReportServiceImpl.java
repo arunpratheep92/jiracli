@@ -75,6 +75,9 @@ public class AggregateProjectReportServiceImpl implements AggregateProjectReport
 		Integer noEstimatesCount = 0;
 		Integer totalEstimates = 0;
 		Integer noDescriptionCount = 0;
+		Integer issuesWithoutStory = 0;
+		Integer totalTasks = 0;
+		Boolean flag = true;
 		int rvId = 0;
 		int sprintId = 0;
 		DateTime startDt = null;
@@ -90,6 +93,7 @@ public class AggregateProjectReportServiceImpl implements AggregateProjectReport
 			{
 				if( rapidView.getName().equals(rapidViewName) )
 				{
+					flag = false;
 					List<Sprint> sprintList = rapidView.getSprints();
 					if( sprintList.size() > 0 )
 					{
@@ -157,6 +161,14 @@ public class AggregateProjectReportServiceImpl implements AggregateProjectReport
 							{
 								totalEstimates++;
 								Promise<Issue> issue = restClient.getIssueClient().getIssue(issueValue.getKey());
+								if( issue.get().getIssueType().getName().equals("Task") )
+								{
+									totalTasks++;
+									if( !issue.get().getIssueLinks().iterator().hasNext() )
+									{
+										issuesWithoutStory++;
+									}
+								}
 								if( issue.get().getTimeTracking() != null )
 								{
 									if( issue.get().getTimeTracking().getOriginalEstimateMinutes() != null )
@@ -199,9 +211,16 @@ public class AggregateProjectReportServiceImpl implements AggregateProjectReport
 					}
 				}
 			}
+			if( flag )
+			{
+				logger.error("Error:" + "Rapidview does not exist ");
+				throw new DataException(HttpStatus.BAD_REQUEST.name(), "Invalid RapidView");
+			}
+			aggregateProjectReport.setIssuesWithoutStory(issuesWithoutStory);
 		}
 		catch( Exception e )
 		{
+			e.printStackTrace();
 			logger.error("Error:" + e.getMessage());
 			throw new DataException(HttpStatus.INTERNAL_SERVER_ERROR.toString(), e.getMessage());
 		}
@@ -214,7 +233,9 @@ public class AggregateProjectReportServiceImpl implements AggregateProjectReport
 		{
 			fileWriter = new FileWriter(env.getProperty("csv.filename") + filename, true);
 			fileWriter.write("Is Sprint followed?," + aggregateProjectReport.getIs_Sprint_followed() + "\n");
-			fileWriter.write("Backlog Count," + aggregateProjectReport.getBacklogCount());
+			fileWriter.write("Backlog Count," + aggregateProjectReport.getBacklogCount() + "\n");
+			fileWriter
+					.write("Issues without Story," + aggregateProjectReport.getIssuesWithoutStory() + "/" + totalTasks);
 		}
 		catch( IOException e )
 		{

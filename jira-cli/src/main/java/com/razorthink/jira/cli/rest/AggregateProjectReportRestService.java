@@ -38,6 +38,7 @@ public class AggregateProjectReportRestService {
 		}
 		catch( Exception e )
 		{
+			e.printStackTrace();
 			return e.getMessage();
 		}
 	}

@@ -6,6 +6,7 @@ public class AggregateProjectReport {
 
 	private Boolean isSprintfollowed;
 	private Integer backlogCount;
+	private Integer issuesWithoutStory;
 	private List<SprintDetails> sprintDetails;
 
 	public Boolean getIs_Sprint_followed()
@@ -36,6 +37,16 @@ public class AggregateProjectReport {
 	public void setSprintDetails( List<SprintDetails> sprintDetails )
 	{
 		this.sprintDetails = sprintDetails;
+	}
+
+	public Integer getIssuesWithoutStory()
+	{
+		return issuesWithoutStory;
+	}
+
+	public void setIssuesWithoutStory( Integer issuesWithoutStory )
+	{
+		this.issuesWithoutStory = issuesWithoutStory;
 	}
 
 }
