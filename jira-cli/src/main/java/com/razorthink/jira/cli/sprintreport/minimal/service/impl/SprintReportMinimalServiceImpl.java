@@ -55,6 +55,8 @@ public class SprintReportMinimalServiceImpl implements SprintReportMinimalServic
 		logger.debug("getMininmalSprintReport");
 		String sprint = params.get("sprint");
 		String project = params.get("project");
+		Integer maxResults = 1000;
+		Integer startAt = 0;
 		int rvId = 0;
 		int sprintId = 0;
 		if( project == null || sprint == null )
@@ -75,54 +77,62 @@ public class SprintReportMinimalServiceImpl implements SprintReportMinimalServic
 			sprintId = Integer.parseInt(matcher.group(1));
 			rvId = Integer.parseInt(matcher.group(2));
 		}
-		for( Issue issueValue : retrievedIssue )
+		while( retrievedIssue.iterator().hasNext() )
 		{
-			Promise<Issue> issue = restClient.getIssueClient().getIssue(issueValue.getKey());
-			sprintReport = new SprintReport();
-			try
+			for( Issue issueValue : retrievedIssue )
 			{
-				sprintReport.setIssueKey(issue.get().getKey());
-				sprintReport.setIssueType(issue.get().getIssueType().getName());
-				sprintReport.setStatus(issue.get().getStatus().getName());
-				sprintReport.setIssueSummary(issue.get().getSummary());
-				if( issue.get().getAssignee() != null )
+				Promise<Issue> issue = restClient.getIssueClient().getIssue(issueValue.getKey());
+				sprintReport = new SprintReport();
+				try
 				{
-					sprintReport.setAssignee(issue.get().getAssignee().getDisplayName());
-				}
-				else
-				{
-					sprintReport.setAssignee("unassigned");
-				}
-				if( issue.get().getTimeTracking() != null )
-				{
-					if( issue.get().getTimeTracking().getOriginalEstimateMinutes() != null )
+					sprintReport.setIssueKey(issue.get().getKey());
+					sprintReport.setIssueType(issue.get().getIssueType().getName());
+					sprintReport.setStatus(issue.get().getStatus().getName());
+					sprintReport.setIssueSummary(issue.get().getSummary());
+					if( issue.get().getAssignee() != null )
 					{
-						sprintReport.setEstimatedHours(new DecimalFormat("##.##")
-								.format(issue.get().getTimeTracking().getOriginalEstimateMinutes() / 60D));
+						sprintReport.setAssignee(issue.get().getAssignee().getDisplayName());
 					}
 					else
 					{
-						sprintReport.setEstimatedHours("0");
+						sprintReport.setAssignee("unassigned");
 					}
-					if( issue.get().getTimeTracking().getTimeSpentMinutes() != null )
+					if( issue.get().getTimeTracking() != null )
 					{
-						sprintReport.setLoggedHours(new DecimalFormat("##.##")
-								.format(issue.get().getTimeTracking().getTimeSpentMinutes() / 60D));
+						if( issue.get().getTimeTracking().getOriginalEstimateMinutes() != null )
+						{
+							sprintReport.setEstimatedHours(new DecimalFormat("##.##")
+									.format(issue.get().getTimeTracking().getOriginalEstimateMinutes() / 60D));
+						}
+						else
+						{
+							sprintReport.setEstimatedHours("0");
+						}
+						if( issue.get().getTimeTracking().getTimeSpentMinutes() != null )
+						{
+							sprintReport.setLoggedHours(new DecimalFormat("##.##")
+									.format(issue.get().getTimeTracking().getTimeSpentMinutes() / 60D));
+						}
+						else
+						{
+							sprintReport.setLoggedHours("0");
+						}
 					}
-					else
-					{
-						sprintReport.setLoggedHours("0");
-					}
+					sprintReportList.add(sprintReport);
 				}
-				sprintReportList.add(sprintReport);
+				catch( InterruptedException | ExecutionException e )
+				{
+					logger.error("Error:" + e.getMessage());
+					throw new DataException(HttpStatus.INTERNAL_SERVER_ERROR.toString(), e.getMessage());
+				}
 			}
-			catch( InterruptedException | ExecutionException e )
-			{
-				logger.error("Error:" + e.getMessage());
-				throw new DataException(HttpStatus.INTERNAL_SERVER_ERROR.toString(), e.getMessage());
-			}
+			startAt += 1000;
+			maxResults += 1000;
+			retrievedIssue = restClient.getSearchClient()
+					.searchJql(" sprint = '" + sprint + "' AND project = '" + project + "'", 1000, 0, null).claim()
+					.getIssues();
 		}
-		for( int i = 0; i < 3; i++ )
+		for( int i = 0; i < 2; i++ )
 		{
 			sprintReport = new SprintReport();
 			sprintReport.setAssignee(" ");
@@ -142,6 +152,15 @@ public class SprintReportMinimalServiceImpl implements SprintReportMinimalServic
 		sprintReport.setLoggedHours(" ");
 		sprintReport.setStatus(" ");
 		sprintReport.setIssueKey("Removed Issues");
+		sprintReportList.add(sprintReport);
+		sprintReport = new SprintReport();
+		sprintReport.setAssignee(" ");
+		sprintReport.setEstimatedHours(" ");
+		sprintReport.setIssueKey(" ");
+		sprintReport.setIssueSummary(" ");
+		sprintReport.setIssueType(" ");
+		sprintReport.setLoggedHours(" ");
+		sprintReport.setStatus(" ");
 		sprintReportList.add(sprintReport);
 		try
 		{
@@ -194,7 +213,7 @@ public class SprintReportMinimalServiceImpl implements SprintReportMinimalServic
 					throw new DataException(HttpStatus.INTERNAL_SERVER_ERROR.toString(), e.getMessage());
 				}
 			}
-			for( int i = 0; i < 3; i++ )
+			for( int i = 0; i < 2; i++ )
 			{
 				sprintReport = new SprintReport();
 				sprintReport.setAssignee(" ");
@@ -210,6 +229,15 @@ public class SprintReportMinimalServiceImpl implements SprintReportMinimalServic
 			sprintReport.setIssueKey("Issues Added during Sprint");
 			sprintReport.setAssignee(" ");
 			sprintReport.setEstimatedHours(" ");
+			sprintReport.setIssueSummary(" ");
+			sprintReport.setIssueType(" ");
+			sprintReport.setLoggedHours(" ");
+			sprintReport.setStatus(" ");
+			sprintReportList.add(sprintReport);
+			sprintReport = new SprintReport();
+			sprintReport.setAssignee(" ");
+			sprintReport.setEstimatedHours(" ");
+			sprintReport.setIssueKey(" ");
 			sprintReport.setIssueSummary(" ");
 			sprintReport.setIssueType(" ");
 			sprintReport.setLoggedHours(" ");

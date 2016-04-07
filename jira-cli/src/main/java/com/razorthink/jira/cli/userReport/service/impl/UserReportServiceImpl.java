@@ -60,6 +60,8 @@ public class UserReportServiceImpl implements UserReportService {
 		String user = params.get("user");
 		String project = params.get("project");
 		String export = params.get("export");
+		Integer maxResults = 1000;
+		Integer startAt = 0;
 		Integer actualHours = 0;
 		Integer estimatedHours = 0;
 		Integer totalTasks = 0;
@@ -68,119 +70,130 @@ public class UserReportServiceImpl implements UserReportService {
 		List<UserReport> issueList = new ArrayList<>();
 		Iterable<Issue> retrievedIssue = restClient.getSearchClient()
 				.searchJql("assignee = '" + user + "' AND sprint = '" + sprint + "' AND project = '" + project + "'",
-						1000, 0, null)
+						maxResults, startAt, null)
 				.claim().getIssues();
-		for( Issue issueValue : retrievedIssue )
+		while( retrievedIssue.iterator().hasNext() )
 		{
-			Promise<Issue> issue = restClient.getIssueClient().getIssue(issueValue.getKey());
-			UserReport userReport = new UserReport();
-			try
+			for( Issue issueValue : retrievedIssue )
 			{
-				userReport.setKey(issue.get().getKey());
-				userReport.setStatus(issue.get().getStatus().getName());
-				userReport.setIssueType(issue.get().getIssueType().getName());
-				userReport.setProject(issue.get().getProject().getName());
-				userReport.setSummary(issue.get().getSummary());
-				userReport.setReporter(issue.get().getReporter().getName());
-				userReport.setReporterDiplayName(issue.get().getReporter().getDisplayName());
-				if( issue.get().getAssignee() != null )
+				Promise<Issue> issue = restClient.getIssueClient().getIssue(issueValue.getKey());
+				UserReport userReport = new UserReport();
+				try
 				{
-					userReport.setAssignee(issue.get().getAssignee().getName());
-					userReport.setAssigneeDiplayName(issue.get().getAssignee().getDisplayName());
-				}
-				else
-				{
-					userReport.setAssignee("Unassigned");
-				}
-				userReport.setCreationDate(issue.get().getCreationDate().toString("MM/dd/yy HH:mm:ss"));
-				if( issue.get().getUpdateDate() != null )
-				{
-					userReport.setUpdateDate(issue.get().getUpdateDate().toString("MM/dd/yy HH:mm:ss"));
-				}
-				else
-				{
-					userReport.setUpdateDate("null");
-				}
-				if( issue.get().getPriority() != null )
-				{
-					userReport.setPriority(issue.get().getPriority().getName());
-				}
-				else
-				{
-					userReport.setPriority("null");
-				}
-				if( issue.get().getTimeTracking() != null )
-				{
-					if( issue.get().getTimeTracking().getOriginalEstimateMinutes() != null )
+					userReport.setKey(issue.get().getKey());
+					userReport.setStatus(issue.get().getStatus().getName());
+					userReport.setIssueType(issue.get().getIssueType().getName());
+					userReport.setProject(issue.get().getProject().getName());
+					userReport.setSummary(issue.get().getSummary());
+					userReport.setReporter(issue.get().getReporter().getName());
+					userReport.setReporterDiplayName(issue.get().getReporter().getDisplayName());
+					if( issue.get().getAssignee() != null )
 					{
-						userReport
-								.setOriginalEstimateMinutes(issue.get().getTimeTracking().getOriginalEstimateMinutes());
+						userReport.setAssignee(issue.get().getAssignee().getName());
+						userReport.setAssigneeDiplayName(issue.get().getAssignee().getDisplayName());
 					}
 					else
 					{
-						userReport.setOriginalEstimateMinutes(0);
+						userReport.setAssignee("Unassigned");
 					}
-					if( issue.get().getTimeTracking().getTimeSpentMinutes() != null )
+					userReport.setCreationDate(issue.get().getCreationDate().toString("MM/dd/yy HH:mm:ss"));
+					if( issue.get().getUpdateDate() != null )
 					{
-						userReport.setTimeSpentMinutes(issue.get().getTimeTracking().getTimeSpentMinutes());
-					}
-					else
-					{
-						userReport.setTimeSpentMinutes(0);
-					}
-					if( issue.get().getTimeTracking().getRemainingEstimateMinutes() != null )
-					{
-						userReport.setRemainingEstimateMinutes(
-								issue.get().getTimeTracking().getRemainingEstimateMinutes());
+						userReport.setUpdateDate(issue.get().getUpdateDate().toString("MM/dd/yy HH:mm:ss"));
 					}
 					else
 					{
-						userReport.setRemainingEstimateMinutes(0);
+						userReport.setUpdateDate("null");
 					}
-					if( issue.get().getTimeTracking().getOriginalEstimateMinutes() != null )
+					if( issue.get().getPriority() != null )
 					{
-						estimatedHours += issue.get().getTimeTracking().getOriginalEstimateMinutes();
-					}
-					if( issue.get().getTimeTracking().getTimeSpentMinutes() != null )
-					{
-						actualHours += issue.get().getTimeTracking().getTimeSpentMinutes();
-					}
-				}
-				if( !NullEmptyUtils.isNullorEmpty((List<?>) issue.get().getFields()) )
-				{
-					if( issue.get().getFieldByName("Epic Link") != null
-							&& issue.get().getFieldByName("Epic Link").getValue() != null )
-					{
-						userReport.setEpicLink(issue.get().getFieldByName("Epic Link").getValue().toString());
+						userReport.setPriority(issue.get().getPriority().getName());
 					}
 					else
 					{
-						userReport.setEpicLink("null");
+						userReport.setPriority("null");
 					}
-					if( issue.get().getFieldByName("Sprint") != null
-							&& issue.get().getFieldByName("Sprint").getValue() != null )
+					if( issue.get().getTimeTracking() != null )
 					{
-						sprintValue = issue.get().getFieldByName("Sprint").getValue().toString();
-						Pattern pattern = Pattern.compile("\\[\".*\\[.*,name=(.*),startDate=(.*),.*\\]");
-						Matcher matcher = pattern.matcher(issue.get().getFieldByName("Sprint").getValue().toString());
-						if( matcher.find() )
+						if( issue.get().getTimeTracking().getOriginalEstimateMinutes() != null )
 						{
-							userReport.setSprint(matcher.group(1));
+							userReport.setOriginalEstimateMinutes(
+									issue.get().getTimeTracking().getOriginalEstimateMinutes());
+						}
+						else
+						{
+							userReport.setOriginalEstimateMinutes(0);
+						}
+						if( issue.get().getTimeTracking().getTimeSpentMinutes() != null )
+						{
+							userReport.setTimeSpentMinutes(issue.get().getTimeTracking().getTimeSpentMinutes());
+						}
+						else
+						{
+							userReport.setTimeSpentMinutes(0);
+						}
+						if( issue.get().getTimeTracking().getRemainingEstimateMinutes() != null )
+						{
+							userReport.setRemainingEstimateMinutes(
+									issue.get().getTimeTracking().getRemainingEstimateMinutes());
+						}
+						else
+						{
+							userReport.setRemainingEstimateMinutes(0);
+						}
+						if( issue.get().getTimeTracking().getOriginalEstimateMinutes() != null )
+						{
+							estimatedHours += issue.get().getTimeTracking().getOriginalEstimateMinutes();
+						}
+						if( issue.get().getTimeTracking().getTimeSpentMinutes() != null )
+						{
+							actualHours += issue.get().getTimeTracking().getTimeSpentMinutes();
 						}
 					}
-					else
+					if( !NullEmptyUtils.isNullorEmpty((List<?>) issue.get().getFields()) )
 					{
-						userReport.setSprint("null");
+						if( issue.get().getFieldByName("Epic Link") != null
+								&& issue.get().getFieldByName("Epic Link").getValue() != null )
+						{
+							userReport.setEpicLink(issue.get().getFieldByName("Epic Link").getValue().toString());
+						}
+						else
+						{
+							userReport.setEpicLink("null");
+						}
+						if( issue.get().getFieldByName("Sprint") != null
+								&& issue.get().getFieldByName("Sprint").getValue() != null )
+						{
+							sprintValue = issue.get().getFieldByName("Sprint").getValue().toString();
+							Pattern pattern = Pattern.compile("\\[\".*\\[.*,name=(.*),startDate=(.*),.*\\]");
+							Matcher matcher = pattern
+									.matcher(issue.get().getFieldByName("Sprint").getValue().toString());
+							if( matcher.find() )
+							{
+								userReport.setSprint(matcher.group(1));
+							}
+						}
+						else
+						{
+							userReport.setSprint("null");
+						}
 					}
+					issueList.add(userReport);
+					totalTasks++;
 				}
-				issueList.add(userReport);
-				totalTasks++;
+				catch( InterruptedException | ExecutionException e )
+				{
+					logger.error("Error:" + e.getMessage());
+					throw new DataException(HttpStatus.INTERNAL_SERVER_ERROR.toString(), e.getMessage());
+				}
 			}
-			catch( InterruptedException | ExecutionException e )
-			{
-				logger.error("Error:" + e.getMessage());
-				throw new DataException(HttpStatus.INTERNAL_SERVER_ERROR.toString(), e.getMessage());
-			}
+			startAt += 1000;
+			maxResults += 1000;
+			retrievedIssue = restClient.getSearchClient()
+					.searchJql(
+							"assignee = '" + user + "' AND sprint = '" + sprint + "' AND project = '" + project + "'",
+							maxResults, startAt, null)
+					.claim().getIssues();
 		}
 		if( export.equals("true") )
 		{

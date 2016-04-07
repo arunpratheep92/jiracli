@@ -77,6 +77,8 @@ public class AggregateProjectReportServiceImpl implements AggregateProjectReport
 		Integer noDescriptionCount = 0;
 		Integer issuesWithoutStory = 0;
 		Integer totalTasks = 0;
+		Integer startAt = 0;
+		Integer maxValue = 1000;
 		Boolean flag = true;
 		int rvId = 0;
 		int sprintId = 0;
@@ -94,6 +96,7 @@ public class AggregateProjectReportServiceImpl implements AggregateProjectReport
 				if( rapidView.getName().equals(rapidViewName) )
 				{
 					flag = false;
+					rvId = rapidView.getId();
 					List<Sprint> sprintList = rapidView.getSprints();
 					if( sprintList.size() > 0 )
 					{
@@ -118,6 +121,8 @@ public class AggregateProjectReportServiceImpl implements AggregateProjectReport
 									"[\\[,]\".*?\\[.*?=(\\d+),.*?=(\\d+),.*?name=(.*?),.*?=(.*?),.*?=(.*?),.*?=(.*?),.*?]\"");
 							Matcher matcher = pattern.matcher(
 									retrievedIssue.iterator().next().getFieldByName("Sprint").getValue().toString());
+							System.out.println(
+									retrievedIssue.iterator().next().getFieldByName("Sprint").getValue().toString());
 							while( matcher.find() )
 							{
 								if( matcher.group(3).equals(sprint.getName()) )
@@ -129,7 +134,6 @@ public class AggregateProjectReportServiceImpl implements AggregateProjectReport
 										completeDate = new DateTime(matcher.group(6));
 									}
 									sprintId = Integer.parseInt(matcher.group(1));
-									rvId = Integer.parseInt(matcher.group(2));
 								}
 							}
 							sprintDetails.setStartDate(startDt.toString("MM/dd/yyyy"));
@@ -157,51 +161,61 @@ public class AggregateProjectReportServiceImpl implements AggregateProjectReport
 							totalEstimates = 0;
 							noEstimatesCount = 0;
 							noDescriptionCount = 0;
-							for( Issue issueValue : retrievedIssue )
+							startAt = 0;
+							maxValue = 1000;
+							while( retrievedIssue.iterator().hasNext() )
 							{
-								totalEstimates++;
-								Promise<Issue> issue = restClient.getIssueClient().getIssue(issueValue.getKey());
-								if( issue.get().getIssueType().getName().equals("Task") )
+								for( Issue issueValue : retrievedIssue )
 								{
-									totalTasks++;
-									if( !issue.get().getIssueLinks().iterator().hasNext() )
+									totalEstimates++;
+									Promise<Issue> issue = restClient.getIssueClient().getIssue(issueValue.getKey());
+									if( issue.get().getIssueType().getName().equals("Task") )
 									{
-										issuesWithoutStory++;
+										totalTasks++;
+										if( !issue.get().getIssueLinks().iterator().hasNext() )
+										{
+											issuesWithoutStory++;
+										}
+									}
+									if( issue.get().getTimeTracking() != null )
+									{
+										if( issue.get().getTimeTracking().getOriginalEstimateMinutes() != null )
+										{
+											estimatedHours += issue.get().getTimeTracking()
+													.getOriginalEstimateMinutes();
+										}
+										else
+										{
+											noEstimatesCount++;
+										}
+										if( issue.get().getTimeTracking().getTimeSpentMinutes() != null )
+										{
+											loggedHours += issue.get().getTimeTracking().getTimeSpentMinutes();
+										}
+									}
+									if( issue.get().getDescription() == null )
+									{
+										noDescriptionCount++;
 									}
 								}
-								if( issue.get().getTimeTracking() != null )
-								{
-									if( issue.get().getTimeTracking().getOriginalEstimateMinutes() != null )
-									{
-										estimatedHours += issue.get().getTimeTracking().getOriginalEstimateMinutes();
-									}
-									else
-									{
-										noEstimatesCount++;
-									}
-									if( issue.get().getTimeTracking().getTimeSpentMinutes() != null )
-									{
-										loggedHours += issue.get().getTimeTracking().getTimeSpentMinutes();
-									}
-								}
-								if( issue.get().getDescription() == null )
-								{
-									noDescriptionCount++;
-								}
+								startAt += 1000;
+								maxValue += 1000;
+								retrievedIssue = restClient.getSearchClient()
+										.searchJql(" sprint = " + sprint.getId() + " AND project = '" + project + "'",
+												maxValue, startAt, null)
+										.claim().getIssues();
 							}
 							RemovedIssues removedIssues = RemovedIssues.get(jiraClient.getRestClient(), rvId, sprintId);
 							Integer changed = removedIssues.getIssuesAdded().size()
 									+ removedIssues.getPuntedIssues().size();
-							sprintDetails.setSprintChanges(changed + "/" + totalEstimates);
+							sprintDetails.setSprintChanges(changed + " / " + totalEstimates);
 							accuracy = ((estimatedHours * 1D) / loggedHours) * 100;
-							sprintDetails.setEstimatedVsActualAccuracy(accuracy.intValue() + "%");
+							sprintDetails.setEstimatedVsActualAccuracy(accuracy.intValue() + " %");
 							sprintDetails.setEstimateProvidedStatus(
-									(totalEstimates - noEstimatesCount) + "/" + totalEstimates);
+									(totalEstimates - noEstimatesCount) + " / " + totalEstimates);
 							sprintDetails.setTaskDescription_Statistics(
-									(totalEstimates - noDescriptionCount) + "/" + totalEstimates);
+									(totalEstimates - noDescriptionCount) + " / " + totalEstimates);
 							sprintDetailsList.add(sprintDetails);
-							aggregateProjectReport
-									.setBacklogCount(rapidView.getBacklogData().getBacklogIssues().size());
 							aggregateProjectReport.setSprintDetails(sprintDetailsList);
 						}
 						else
@@ -209,6 +223,7 @@ public class AggregateProjectReportServiceImpl implements AggregateProjectReport
 							sprintDetailsList.add(sprintDetails);
 						}
 					}
+					aggregateProjectReport.setBacklogCount(rapidView.getBacklogData().getBacklogIssues().size());
 				}
 			}
 			if( flag )
@@ -235,7 +250,7 @@ public class AggregateProjectReportServiceImpl implements AggregateProjectReport
 			fileWriter.write("Is Sprint followed?," + aggregateProjectReport.getIs_Sprint_followed() + "\n");
 			fileWriter.write("Backlog Count," + aggregateProjectReport.getBacklogCount() + "\n");
 			fileWriter
-					.write("Issues without Story," + aggregateProjectReport.getIssuesWithoutStory() + "/" + totalTasks);
+					.write("Issues without Story," + aggregateProjectReport.getIssuesWithoutStory() + " / " + totalTasks);
 		}
 		catch( IOException e )
 		{

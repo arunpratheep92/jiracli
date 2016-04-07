@@ -35,17 +35,10 @@ public class CompleteJiraReportServiceImpl implements CompleteJiraReportService 
 
 	/**
 	 * Performs a JQL search and returns issues matching the query. 
-	 * The first startAt issues will be skipped and SearchResult will contain at most maxResults issues. 
 	 * 
 	 * @param params contains 
 	 * <ul>
 	 * <li><strong>jql</strong> Jira Query Language which is used to filter the issues
-	 * <li><strong>maxResults</strong> Maximum results to be fetched from Jira(0-1000)
-	 *  When null is given, the default maxResults configured in JIRA is used (usually 50).
-	 * <li><strong>startAt</strong> starting index (0-based) defining how many issues should be skipped in the
-	 *  results. For example for startAt=5 and maxResults=3 the results will include matching
-	 *  issues with index 5, 6 and 7. For startAt = 0 and maxResults=3 the issues returned are
-	 *  from position 0, 1 and 2. When null is given, the default startAt is used (0).
 	 * </ul>
 	 * @param restClient It is used to make Rest calls to Jira to fetch complete details
 	 * @return Complete url of the report generated
@@ -58,15 +51,10 @@ public class CompleteJiraReportServiceImpl implements CompleteJiraReportService 
 	{
 		logger.debug("getCompleteJiraReport");
 		String jql = null;
-		Integer maxResults = null;
-		Integer startAt = null;
-		try
-		{
-			jql = params.get("jql");
-			maxResults = Integer.parseInt(params.get("maxResults"));
-			startAt = Integer.parseInt(params.get("startAt"));
-		}
-		catch( Exception e )
+		Integer maxResults = 1000;
+		Integer startAt = 0;
+		jql = params.get("jql");
+		if( jql == null )
 		{
 			logger.error("Error: Missing required paramaters");
 			throw new DataException(HttpStatus.BAD_REQUEST.toString(), "Missing required paramaters");
@@ -75,112 +63,120 @@ public class CompleteJiraReportServiceImpl implements CompleteJiraReportService 
 		String project = "DefaultProject";
 		Iterable<Issue> retrievedIssue = restClient.getSearchClient().searchJql(jql, maxResults, startAt, null).claim()
 				.getIssues();
-		for( Issue issueValue : retrievedIssue )
+		while( retrievedIssue.iterator().hasNext() )
 		{
-			Promise<Issue> issue = restClient.getIssueClient().getIssue(issueValue.getKey());
-			JiraReportIssue JiraReportIssue = new JiraReportIssue();
-			try
+			for( Issue issueValue : retrievedIssue )
 			{
-				StringBuilder sprint = new StringBuilder("");
-				JiraReportIssue.setKey(issue.get().getKey());
-				JiraReportIssue.setStatus(issue.get().getStatus().getName());
-				JiraReportIssue.setIssueType(issue.get().getIssueType().getName());
-				JiraReportIssue.setProject(issue.get().getProject().getName());
-				project = JiraReportIssue.getProject();
-				JiraReportIssue.setSummary(issue.get().getSummary());
-				JiraReportIssue.setReporter(issue.get().getReporter().getName());
-				JiraReportIssue.setReporterDiplayName(issue.get().getReporter().getDisplayName());
-				if( issue.get().getAssignee() != null )
+				Promise<Issue> issue = restClient.getIssueClient().getIssue(issueValue.getKey());
+				JiraReportIssue JiraReportIssue = new JiraReportIssue();
+				try
 				{
-					JiraReportIssue.setAssignee(issue.get().getAssignee().getName());
-					JiraReportIssue.setAssigneeDiplayName(issue.get().getAssignee().getDisplayName());
-				}
-				else
-				{
-					JiraReportIssue.setAssignee("Unassigned");
-				}
-				JiraReportIssue.setCreationDate(issue.get().getCreationDate().toString("MM/dd/yy HH:mm:ss"));
-				if( issue.get().getUpdateDate() != null )
-				{
-					JiraReportIssue.setUpdateDate(issue.get().getUpdateDate().toString("MM/dd/yy HH:mm:ss"));
-				}
-				else
-				{
-					JiraReportIssue.setUpdateDate("null");
-				}
-				if( issue.get().getPriority() != null )
-				{
-					JiraReportIssue.setPriority(issue.get().getPriority().getName());
-				}
-				else
-				{
-					JiraReportIssue.setPriority("null");
-				}
-				if( issue.get().getTimeTracking() != null )
-				{
-					if( issue.get().getTimeTracking().getOriginalEstimateMinutes() != null )
+					StringBuilder sprint = new StringBuilder("");
+					JiraReportIssue.setKey(issue.get().getKey());
+					JiraReportIssue.setStatus(issue.get().getStatus().getName());
+					JiraReportIssue.setIssueType(issue.get().getIssueType().getName());
+					JiraReportIssue.setProject(issue.get().getProject().getName());
+					project = JiraReportIssue.getProject();
+					JiraReportIssue.setSummary(issue.get().getSummary());
+					JiraReportIssue.setReporter(issue.get().getReporter().getName());
+					JiraReportIssue.setReporterDiplayName(issue.get().getReporter().getDisplayName());
+					if( issue.get().getAssignee() != null )
 					{
-						JiraReportIssue
-								.setOriginalEstimateMinutes(issue.get().getTimeTracking().getOriginalEstimateMinutes());
+						JiraReportIssue.setAssignee(issue.get().getAssignee().getName());
+						JiraReportIssue.setAssigneeDiplayName(issue.get().getAssignee().getDisplayName());
 					}
 					else
 					{
-						JiraReportIssue.setOriginalEstimateMinutes(0);
+						JiraReportIssue.setAssignee("Unassigned");
 					}
-					if( issue.get().getTimeTracking().getTimeSpentMinutes() != null )
+					JiraReportIssue.setCreationDate(issue.get().getCreationDate().toString("MM/dd/yy HH:mm:ss"));
+					if( issue.get().getUpdateDate() != null )
 					{
-						JiraReportIssue.setTimeSpentMinutes(issue.get().getTimeTracking().getTimeSpentMinutes());
-					}
-					else
-					{
-						JiraReportIssue.setTimeSpentMinutes(0);
-					}
-					if( issue.get().getTimeTracking().getRemainingEstimateMinutes() != null )
-					{
-						JiraReportIssue.setRemainingEstimateMinutes(
-								issue.get().getTimeTracking().getRemainingEstimateMinutes());
+						JiraReportIssue.setUpdateDate(issue.get().getUpdateDate().toString("MM/dd/yy HH:mm:ss"));
 					}
 					else
 					{
-						JiraReportIssue.setRemainingEstimateMinutes(0);
+						JiraReportIssue.setUpdateDate("null");
 					}
-				}
-				if( !NullEmptyUtils.isNullorEmpty((List<?>) issue.get().getFields()) )
-				{
-					if( issue.get().getFieldByName("Epic Link") != null
-							&& issue.get().getFieldByName("Epic Link").getValue() != null )
+					if( issue.get().getPriority() != null )
 					{
-						JiraReportIssue.setEpicKey(issue.get().getFieldByName("Epic Link").getValue().toString());
+						JiraReportIssue.setPriority(issue.get().getPriority().getName());
 					}
 					else
 					{
-						JiraReportIssue.setEpicKey("null");
+						JiraReportIssue.setPriority("null");
 					}
-					if( issue.get().getFieldByName("Sprint") != null
-							&& issue.get().getFieldByName("Sprint").getValue() != null )
+					if( issue.get().getTimeTracking() != null )
 					{
-						Pattern pattern = Pattern.compile("name=(.*?),startDate=.*?");
-						Matcher matcher = pattern.matcher(issue.get().getFieldByName("Sprint").getValue().toString());
-						while( matcher.find() )
+						if( issue.get().getTimeTracking().getOriginalEstimateMinutes() != null )
 						{
-							sprint.append(matcher.group(1)).append(" ");
+							JiraReportIssue.setOriginalEstimateMinutes(
+									issue.get().getTimeTracking().getOriginalEstimateMinutes());
 						}
-						JiraReportIssue.setSprint(sprint.toString());
+						else
+						{
+							JiraReportIssue.setOriginalEstimateMinutes(0);
+						}
+						if( issue.get().getTimeTracking().getTimeSpentMinutes() != null )
+						{
+							JiraReportIssue.setTimeSpentMinutes(issue.get().getTimeTracking().getTimeSpentMinutes());
+						}
+						else
+						{
+							JiraReportIssue.setTimeSpentMinutes(0);
+						}
+						if( issue.get().getTimeTracking().getRemainingEstimateMinutes() != null )
+						{
+							JiraReportIssue.setRemainingEstimateMinutes(
+									issue.get().getTimeTracking().getRemainingEstimateMinutes());
+						}
+						else
+						{
+							JiraReportIssue.setRemainingEstimateMinutes(0);
+						}
 					}
-					else
+					if( !NullEmptyUtils.isNullorEmpty((List<?>) issue.get().getFields()) )
 					{
-						JiraReportIssue.setSprint("null");
+						if( issue.get().getFieldByName("Epic Link") != null
+								&& issue.get().getFieldByName("Epic Link").getValue() != null )
+						{
+							JiraReportIssue.setEpicKey(issue.get().getFieldByName("Epic Link").getValue().toString());
+						}
+						else
+						{
+							JiraReportIssue.setEpicKey("null");
+						}
+						if( issue.get().getFieldByName("Sprint") != null
+								&& issue.get().getFieldByName("Sprint").getValue() != null )
+						{
+							Pattern pattern = Pattern.compile("name=(.*?),startDate=.*?");
+							Matcher matcher = pattern
+									.matcher(issue.get().getFieldByName("Sprint").getValue().toString());
+							while( matcher.find() )
+							{
+								sprint.append(matcher.group(1)).append(" ");
+							}
+							JiraReportIssue.setSprint(sprint.toString());
+						}
+						else
+						{
+							JiraReportIssue.setSprint("null");
+						}
 					}
+					report.add(JiraReportIssue);
 				}
-				report.add(JiraReportIssue);
+
+				catch( InterruptedException | ExecutionException e )
+				{
+					logger.error("Error:" + e.getMessage());
+					throw new DataException(HttpStatus.INTERNAL_SERVER_ERROR.toString(), e.getMessage());
+				}
 			}
-			catch( InterruptedException | ExecutionException e )
-			{
-				logger.error("Error:" + e.getMessage());
-				throw new DataException(HttpStatus.INTERNAL_SERVER_ERROR.toString(), e.getMessage());
-			}
+			startAt += 1000;
+			maxResults += 1000;
+			retrievedIssue = restClient.getSearchClient().searchJql(jql, maxResults, startAt, null).claim().getIssues();
 		}
-		String filename = project + "_complete_dump_" + startAt + "_to_" + maxResults + ".csv";
+		String filename = project + "_complete_dump.csv";
 		filename = filename.replace(" ", "_");
 		ConvertToCSV exportToCSV = new ConvertToCSV();
 		exportToCSV.exportToCSV(env.getProperty("csv.filename") + filename, report);
