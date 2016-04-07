@@ -129,8 +129,8 @@ public class SprintReportMinimalServiceImpl implements SprintReportMinimalServic
 			startAt += 1000;
 			maxResults += 1000;
 			retrievedIssue = restClient.getSearchClient()
-					.searchJql(" sprint = '" + sprint + "' AND project = '" + project + "'", 1000, 0, null).claim()
-					.getIssues();
+					.searchJql(" sprint = '" + sprint + "' AND project = '" + project + "'", maxResults, startAt, null)
+					.claim().getIssues();
 		}
 		for( int i = 0; i < 2; i++ )
 		{
