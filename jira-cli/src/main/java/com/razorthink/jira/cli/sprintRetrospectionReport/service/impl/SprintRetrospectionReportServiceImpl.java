@@ -1,5 +1,6 @@
 package com.razorthink.jira.cli.sprintRetrospectionReport.service.impl;
 
+import java.text.DecimalFormat;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
@@ -99,11 +100,11 @@ public class SprintRetrospectionReportServiceImpl implements SprintRetrospection
 		{
 			if( matcher.group(3).equals(sprint) )
 			{
-				startDt = new DateTime(matcher.group(4),DateTimeZone.forID(ZoneId.of("+05:30").toString()));
-				endDt = new DateTime(matcher.group(5),DateTimeZone.forID(ZoneId.of("+05:30").toString()));
+				startDt = new DateTime(matcher.group(4), DateTimeZone.forID(ZoneId.of("+05:30").toString()));
+				endDt = new DateTime(matcher.group(5), DateTimeZone.forID(ZoneId.of("+05:30").toString()));
 				if( !matcher.group(6).equals("<null>") )
 				{
-					completeDate = new DateTime(matcher.group(6),DateTimeZone.forID(ZoneId.of("+05:30").toString()));
+					completeDate = new DateTime(matcher.group(6), DateTimeZone.forID(ZoneId.of("+05:30").toString()));
 				}
 				sprintId = Integer.parseInt(matcher.group(1));
 				rvId = Integer.parseInt(matcher.group(2));
@@ -190,7 +191,7 @@ public class SprintRetrospectionReportServiceImpl implements SprintRetrospection
 						throw new DataException(HttpStatus.INTERNAL_SERVER_ERROR.toString(), e.getMessage());
 					}
 				}
-				tempDate = new DateTime(startDt.getMillis(),DateTimeZone.forID(ZoneId.of("+05:30").toString()));
+				tempDate = new DateTime(startDt.getMillis(), DateTimeZone.forID(ZoneId.of("+05:30").toString()));
 				while( tempDate.compareTo(endDt) <= 0 )
 				{
 					if( tempDate.getDayOfWeek() != DateTimeConstants.SATURDAY
@@ -214,14 +215,17 @@ public class SprintRetrospectionReportServiceImpl implements SprintRetrospection
 				}
 				surplus = availableHours - estimatedHours;
 				sprintRetrospection.setAssignee(issueValue.getAssignee().getDisplayName());
-				sprintRetrospection.setEstimatedHours(estimatedHours);
-				sprintRetrospection.setTimeTaken(actualHours);
+				sprintRetrospection
+						.setEstimatedHours(Double.parseDouble(new DecimalFormat("##.##").format(estimatedHours)));
+				sprintRetrospection.setTimeTaken(Double.parseDouble(new DecimalFormat("##.##").format(actualHours)));
 				sprintRetrospection.setAvailableHours(availableHours);
 				sprintRetrospection.setSurplus(surplus);
-				sprintRetrospection.setBuffer((surplus / availableHours) * 100);
+				sprintRetrospection.setBuffer(
+						Double.parseDouble(new DecimalFormat("##.##").format((surplus / availableHours) * 100)));
 				if( actualHours != 0 )
 				{
-					sprintRetrospection.setEfficiency(100 + ((estimatedHours - actualHours) / actualHours * 100));
+					sprintRetrospection.setEfficiency(Double.parseDouble(new DecimalFormat("##.##")
+							.format(100 + ((estimatedHours - actualHours) / actualHours * 100))));
 				}
 				else
 				{
