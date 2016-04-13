@@ -1,5 +1,6 @@
 package com.razorthink.jira.cli.sprintRetrospectionReport.service.impl;
 
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -10,6 +11,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeConstants;
+import org.joda.time.DateTimeZone;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -97,11 +99,11 @@ public class SprintRetrospectionReportServiceImpl implements SprintRetrospection
 		{
 			if( matcher.group(3).equals(sprint) )
 			{
-				startDt = new DateTime(matcher.group(4));
-				endDt = new DateTime(matcher.group(5));
+				startDt = new DateTime(matcher.group(4),DateTimeZone.forID(ZoneId.of("+05:30").toString()));
+				endDt = new DateTime(matcher.group(5),DateTimeZone.forID(ZoneId.of("+05:30").toString()));
 				if( !matcher.group(6).equals("<null>") )
 				{
-					completeDate = new DateTime(matcher.group(6));
+					completeDate = new DateTime(matcher.group(6),DateTimeZone.forID(ZoneId.of("+05:30").toString()));
 				}
 				sprintId = Integer.parseInt(matcher.group(1));
 				rvId = Integer.parseInt(matcher.group(2));
@@ -188,7 +190,7 @@ public class SprintRetrospectionReportServiceImpl implements SprintRetrospection
 						throw new DataException(HttpStatus.INTERNAL_SERVER_ERROR.toString(), e.getMessage());
 					}
 				}
-				tempDate = new DateTime(startDt.getMillis());
+				tempDate = new DateTime(startDt.getMillis(),DateTimeZone.forID(ZoneId.of("+05:30").toString()));
 				while( tempDate.compareTo(endDt) <= 0 )
 				{
 					if( tempDate.getDayOfWeek() != DateTimeConstants.SATURDAY
