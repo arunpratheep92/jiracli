@@ -80,6 +80,7 @@ public class SprintRetrospectionReportServiceImpl implements SprintRetrospection
 		DateTime endDt = null;
 		DateTime tempDate = null;
 		DateTime completeDate = null;
+		String timezone = null;
 		String jql = null;
 		List<SprintRetrospection> sprintRetrospectionReport = new ArrayList<>();
 		List<String> incompleteIssueKeys = new ArrayList<>();
@@ -100,11 +101,13 @@ public class SprintRetrospectionReportServiceImpl implements SprintRetrospection
 		{
 			if( matcher.group(3).equals(sprint) )
 			{
-				startDt = new DateTime(matcher.group(4), DateTimeZone.forID(ZoneId.of("+05:30").toString()));
-				endDt = new DateTime(matcher.group(5), DateTimeZone.forID(ZoneId.of("+05:30").toString()));
+				timezone = matcher.group(4).substring(23);
+				System.out.println(timezone);
+				startDt = new DateTime(matcher.group(4), DateTimeZone.forID(ZoneId.of(timezone).toString()));
+				endDt = new DateTime(matcher.group(5), DateTimeZone.forID(ZoneId.of(timezone).toString()));
 				if( !matcher.group(6).equals("<null>") )
 				{
-					completeDate = new DateTime(matcher.group(6), DateTimeZone.forID(ZoneId.of("+05:30").toString()));
+					completeDate = new DateTime(matcher.group(6), DateTimeZone.forID(ZoneId.of(timezone).toString()));
 				}
 				sprintId = Integer.parseInt(matcher.group(1));
 				rvId = Integer.parseInt(matcher.group(2));
@@ -191,7 +194,7 @@ public class SprintRetrospectionReportServiceImpl implements SprintRetrospection
 						throw new DataException(HttpStatus.INTERNAL_SERVER_ERROR.toString(), e.getMessage());
 					}
 				}
-				tempDate = new DateTime(startDt.getMillis(), DateTimeZone.forID(ZoneId.of("+05:30").toString()));
+				tempDate = new DateTime(startDt.getMillis(), DateTimeZone.forID(ZoneId.of(timezone).toString()));
 				while( tempDate.compareTo(endDt) <= 0 )
 				{
 					if( tempDate.getDayOfWeek() != DateTimeConstants.SATURDAY
