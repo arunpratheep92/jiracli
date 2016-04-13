@@ -122,6 +122,7 @@ public class SprintRetrospectionReportServiceImpl implements SprintRetrospection
 		}
 		for( Issue issueValue : retrievedIssue )
 		{
+			availableHours = 0.0;
 			if( !assignee.contains(issueValue.getAssignee().getDisplayName()) )
 			{
 				if( completeDate != null )
@@ -187,21 +188,18 @@ public class SprintRetrospectionReportServiceImpl implements SprintRetrospection
 						throw new DataException(HttpStatus.INTERNAL_SERVER_ERROR.toString(), e.getMessage());
 					}
 				}
-				if( assignee.isEmpty() )
+				tempDate = new DateTime(startDt.getMillis());
+				while( tempDate.compareTo(endDt) <= 0 )
 				{
-					tempDate = new DateTime(startDt.getMillis());
-					while( tempDate.compareTo(endDt) <= 0 )
+					if( tempDate.getDayOfWeek() != DateTimeConstants.SATURDAY
+							&& tempDate.getDayOfWeek() != DateTimeConstants.SUNDAY )
 					{
-						if( tempDate.getDayOfWeek() != DateTimeConstants.SATURDAY
-								&& tempDate.getDayOfWeek() != DateTimeConstants.SUNDAY )
-						{
-							availableHours += 1;
-						}
-						tempDate = tempDate.plusDays(1);
-
+						availableHours += 1;
 					}
-					availableHours *= 8D;
+					tempDate = tempDate.plusDays(1);
+
 				}
+				availableHours *= 8D;
 				estimatedHours /= 60D;
 				actualHours /= 60D;
 				if( params.get("availableHours") != null )
