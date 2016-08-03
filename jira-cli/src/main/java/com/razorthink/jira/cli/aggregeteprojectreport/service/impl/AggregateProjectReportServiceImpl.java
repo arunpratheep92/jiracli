@@ -118,7 +118,7 @@ public class AggregateProjectReportServiceImpl implements AggregateProjectReport
 						if( retrievedIssue.iterator().hasNext() )
 						{
 							Pattern pattern = Pattern.compile(
-									"[\\[,]\".*?\\[.*?=(\\d+),.*?=(\\d+),.*?name=(.*?),.*?=(.*?),.*?=(.*?),.*?=(.*?),.*?]\"");
+									"[\\[,]\".*?\\[.*?=(\\d+),.*?=(\\d+),.*?name=(.*?),.*?startDate=(.*?),.*?=(.*?),.*?=(.*?),.*?]\"");
 							Matcher matcher = pattern.matcher(
 									retrievedIssue.iterator().next().getFieldByName("Sprint").getValue().toString());
 							System.out.println(
@@ -223,7 +223,14 @@ public class AggregateProjectReportServiceImpl implements AggregateProjectReport
 							sprintDetailsList.add(sprintDetails);
 						}
 					}
-					aggregateProjectReport.setBacklogCount(rapidView.getBacklogData().getBacklogIssues().size());
+					if(rapidView.getBacklogData().getBacklogIssues()!=null)
+					{
+						aggregateProjectReport.setBacklogCount(rapidView.getBacklogData().getBacklogIssues().size());
+					}
+					else
+					{
+						aggregateProjectReport.setBacklogCount(0);
+					}
 				}
 			}
 			if( flag )
